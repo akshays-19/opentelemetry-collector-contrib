@@ -492,9 +492,7 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 
 	resourceLog := logs.ResourceLogs().AppendEmpty()
 	resourceAttributes := resourceLog.Resource().Attributes()
-	if s.metricsBuilderConfig.ResourceAttributes.OracledbInstanceName.Enabled {
-		resourceAttributes.PutStr(dbPrefix+"instance.name", s.instanceName)
-	}
+	resourceAttributes.PutStr(dbPrefix+"instance.name", s.instanceName)
 	scopedLog := resourceLog.ScopeLogs().AppendEmpty()
 	scopedLog.Scope().SetName(metadata.ScopeName)
 	scopedLog.Scope().SetVersion("v0.0.1")
@@ -507,8 +505,6 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 
 		// reporting human-readable query  hash plan
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+planHashValue), queryPlanHashVal)
-
-		s.logger.Info(fmt.Sprintf("PlanHash: %v, DataRow: %v", queryPlanHashVal, row))
 
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+hostName), row[hostName])
 
@@ -538,14 +534,13 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 			s.logger.Error(fmt.Sprintf("oracleScraper failed getting metric row: %s", err))
 		} else {
 			record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+sqlText), obfuscatedSQL)
-
 		}
 
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+osUser), row[osUser])
 
 		i, err := strconv.ParseInt(row[duration], 10, 64)
 		if err != nil {
-			panic(err)
+			s.logger.Error(fmt.Sprintf("oracleScraper failed to parse duration value ", err))
 		}
 		record.Attributes().PutInt(dbPrefix+queryPrefix+duration, i)
 	}
