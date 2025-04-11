@@ -99,15 +99,13 @@ func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig me
 	return scraper.NewMetrics(s.scrape, scraper.WithShutdown(s.shutdown), scraper.WithStart(s.start))
 }
 
-func newLogsScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig, logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string) (scraper.Logs, error) {
+func newLogsScraper(scrapeCfg scraperhelper.ControllerConfig, logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string) (scraper.Logs, error) {
 	s := &oracleScraper{
-		mb:                   metricsBuilder,
-		metricsBuilderConfig: metricsBuilderConfig,
-		scrapeCfg:            scrapeCfg,
-		logger:               logger,
-		dbProviderFunc:       providerFunc,
-		clientProviderFunc:   clientProviderFunc,
-		instanceName:         instanceName,
+		scrapeCfg:          scrapeCfg,
+		logger:             logger,
+		dbProviderFunc:     providerFunc,
+		clientProviderFunc: clientProviderFunc,
+		instanceName:       instanceName,
 	}
 	return scraper.NewLogs(s.scrapeLogs, scraper.WithShutdown(s.shutdown), scraper.WithStart(s.start))
 
