@@ -14,180 +14,6 @@ import (
 	"go.opentelemetry.io/collector/receiver"
 )
 
-var MetricsInfo = metricsInfo{
-	OracledbConsistentGets: metricInfo{
-		Name: "oracledb.consistent_gets",
-	},
-	OracledbCPUTime: metricInfo{
-		Name: "oracledb.cpu_time",
-	},
-	OracledbDbBlockGets: metricInfo{
-		Name: "oracledb.db_block_gets",
-	},
-	OracledbDdlStatementsParallelized: metricInfo{
-		Name: "oracledb.ddl_statements_parallelized",
-	},
-	OracledbDmlLocksLimit: metricInfo{
-		Name: "oracledb.dml_locks.limit",
-	},
-	OracledbDmlLocksUsage: metricInfo{
-		Name: "oracledb.dml_locks.usage",
-	},
-	OracledbDmlStatementsParallelized: metricInfo{
-		Name: "oracledb.dml_statements_parallelized",
-	},
-	OracledbEnqueueDeadlocks: metricInfo{
-		Name: "oracledb.enqueue_deadlocks",
-	},
-	OracledbEnqueueLocksLimit: metricInfo{
-		Name: "oracledb.enqueue_locks.limit",
-	},
-	OracledbEnqueueLocksUsage: metricInfo{
-		Name: "oracledb.enqueue_locks.usage",
-	},
-	OracledbEnqueueResourcesLimit: metricInfo{
-		Name: "oracledb.enqueue_resources.limit",
-	},
-	OracledbEnqueueResourcesUsage: metricInfo{
-		Name: "oracledb.enqueue_resources.usage",
-	},
-	OracledbExchangeDeadlocks: metricInfo{
-		Name: "oracledb.exchange_deadlocks",
-	},
-	OracledbExecutions: metricInfo{
-		Name: "oracledb.executions",
-	},
-	OracledbHardParses: metricInfo{
-		Name: "oracledb.hard_parses",
-	},
-	OracledbLogicalReads: metricInfo{
-		Name: "oracledb.logical_reads",
-	},
-	OracledbParallelOperationsDowngraded1To25Pct: metricInfo{
-		Name: "oracledb.parallel_operations_downgraded_1_to_25_pct",
-	},
-	OracledbParallelOperationsDowngraded25To50Pct: metricInfo{
-		Name: "oracledb.parallel_operations_downgraded_25_to_50_pct",
-	},
-	OracledbParallelOperationsDowngraded50To75Pct: metricInfo{
-		Name: "oracledb.parallel_operations_downgraded_50_to_75_pct",
-	},
-	OracledbParallelOperationsDowngraded75To99Pct: metricInfo{
-		Name: "oracledb.parallel_operations_downgraded_75_to_99_pct",
-	},
-	OracledbParallelOperationsDowngradedToSerial: metricInfo{
-		Name: "oracledb.parallel_operations_downgraded_to_serial",
-	},
-	OracledbParallelOperationsNotDowngraded: metricInfo{
-		Name: "oracledb.parallel_operations_not_downgraded",
-	},
-	OracledbParseCalls: metricInfo{
-		Name: "oracledb.parse_calls",
-	},
-	OracledbPgaMemory: metricInfo{
-		Name: "oracledb.pga_memory",
-	},
-	OracledbPhysicalReadIoRequests: metricInfo{
-		Name: "oracledb.physical_read_io_requests",
-	},
-	OracledbPhysicalReads: metricInfo{
-		Name: "oracledb.physical_reads",
-	},
-	OracledbPhysicalReadsDirect: metricInfo{
-		Name: "oracledb.physical_reads_direct",
-	},
-	OracledbPhysicalWriteIoRequests: metricInfo{
-		Name: "oracledb.physical_write_io_requests",
-	},
-	OracledbPhysicalWrites: metricInfo{
-		Name: "oracledb.physical_writes",
-	},
-	OracledbPhysicalWritesDirect: metricInfo{
-		Name: "oracledb.physical_writes_direct",
-	},
-	OracledbProcessesLimit: metricInfo{
-		Name: "oracledb.processes.limit",
-	},
-	OracledbProcessesUsage: metricInfo{
-		Name: "oracledb.processes.usage",
-	},
-	OracledbQueriesParallelized: metricInfo{
-		Name: "oracledb.queries_parallelized",
-	},
-	OracledbSessionsLimit: metricInfo{
-		Name: "oracledb.sessions.limit",
-	},
-	OracledbSessionsUsage: metricInfo{
-		Name: "oracledb.sessions.usage",
-	},
-	OracledbTablespaceSizeLimit: metricInfo{
-		Name: "oracledb.tablespace_size.limit",
-	},
-	OracledbTablespaceSizeUsage: metricInfo{
-		Name: "oracledb.tablespace_size.usage",
-	},
-	OracledbTransactionsLimit: metricInfo{
-		Name: "oracledb.transactions.limit",
-	},
-	OracledbTransactionsUsage: metricInfo{
-		Name: "oracledb.transactions.usage",
-	},
-	OracledbUserCommits: metricInfo{
-		Name: "oracledb.user_commits",
-	},
-	OracledbUserRollbacks: metricInfo{
-		Name: "oracledb.user_rollbacks",
-	},
-}
-
-type metricsInfo struct {
-	OracledbConsistentGets                        metricInfo
-	OracledbCPUTime                               metricInfo
-	OracledbDbBlockGets                           metricInfo
-	OracledbDdlStatementsParallelized             metricInfo
-	OracledbDmlLocksLimit                         metricInfo
-	OracledbDmlLocksUsage                         metricInfo
-	OracledbDmlStatementsParallelized             metricInfo
-	OracledbEnqueueDeadlocks                      metricInfo
-	OracledbEnqueueLocksLimit                     metricInfo
-	OracledbEnqueueLocksUsage                     metricInfo
-	OracledbEnqueueResourcesLimit                 metricInfo
-	OracledbEnqueueResourcesUsage                 metricInfo
-	OracledbExchangeDeadlocks                     metricInfo
-	OracledbExecutions                            metricInfo
-	OracledbHardParses                            metricInfo
-	OracledbLogicalReads                          metricInfo
-	OracledbParallelOperationsDowngraded1To25Pct  metricInfo
-	OracledbParallelOperationsDowngraded25To50Pct metricInfo
-	OracledbParallelOperationsDowngraded50To75Pct metricInfo
-	OracledbParallelOperationsDowngraded75To99Pct metricInfo
-	OracledbParallelOperationsDowngradedToSerial  metricInfo
-	OracledbParallelOperationsNotDowngraded       metricInfo
-	OracledbParseCalls                            metricInfo
-	OracledbPgaMemory                             metricInfo
-	OracledbPhysicalReadIoRequests                metricInfo
-	OracledbPhysicalReads                         metricInfo
-	OracledbPhysicalReadsDirect                   metricInfo
-	OracledbPhysicalWriteIoRequests               metricInfo
-	OracledbPhysicalWrites                        metricInfo
-	OracledbPhysicalWritesDirect                  metricInfo
-	OracledbProcessesLimit                        metricInfo
-	OracledbProcessesUsage                        metricInfo
-	OracledbQueriesParallelized                   metricInfo
-	OracledbSessionsLimit                         metricInfo
-	OracledbSessionsUsage                         metricInfo
-	OracledbTablespaceSizeLimit                   metricInfo
-	OracledbTablespaceSizeUsage                   metricInfo
-	OracledbTransactionsLimit                     metricInfo
-	OracledbTransactionsUsage                     metricInfo
-	OracledbUserCommits                           metricInfo
-	OracledbUserRollbacks                         metricInfo
-}
-
-type metricInfo struct {
-	Name string
-}
-
 type metricOracledbConsistentGets struct {
 	data     pmetric.Metric // data buffer for generated metric.
 	config   MetricConfig   // metric config provided by user.
@@ -2328,6 +2154,7 @@ func WithStartTime(startTime pcommon.Timestamp) MetricBuilderOption {
 		mb.startTime = startTime
 	})
 }
+
 func NewMetricsBuilder(mbc MetricsBuilderConfig, settings receiver.Settings, options ...MetricBuilderOption) *MetricsBuilder {
 	mb := &MetricsBuilder{
 		config:                                              mbc,
@@ -2450,7 +2277,7 @@ func WithStartTimeOverride(start pcommon.Timestamp) ResourceMetricsOption {
 func (mb *MetricsBuilder) EmitForResource(options ...ResourceMetricsOption) {
 	rm := pmetric.NewResourceMetrics()
 	ils := rm.ScopeMetrics().AppendEmpty()
-	ils.Scope().SetName(ScopeName)
+	ils.Scope().SetName("github.com/open-telemetry/opentelemetry-collector-contrib/receiver/oracledbreceiver")
 	ils.Scope().SetVersion(mb.buildInfo.Version)
 	ils.Metrics().EnsureCapacity(mb.metricsCapacity)
 	mb.metricOracledbConsistentGets.emit(ils.Metrics())
