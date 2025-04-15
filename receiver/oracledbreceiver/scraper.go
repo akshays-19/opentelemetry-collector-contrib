@@ -61,7 +61,23 @@ const (
 		select um.TABLESPACE_NAME, um.USED_SPACE, um.TABLESPACE_SIZE, ts.BLOCK_SIZE
 		FROM DBA_TABLESPACE_USAGE_METRICS um INNER JOIN DBA_TABLESPACES ts
 		ON um.TABLESPACE_NAME = ts.TABLESPACE_NAME`
-	samplesQuery = `SELECT /* collector-query */  S.MACHINE, S.USERNAME, S.SCHEMANAME, S.SQL_ID, S.SQL_CHILD_NUMBER, S.SID, S.SERIAL#, Q.SQL_FULLTEXT, S.OSUSER, S.PROCESS, S.PORT, S.PROGRAM, S.MODULE, S.STATUS, S.STATE, Q.PLAN_HASH_VALUE, ROUND((SYSDATE - SQL_EXEC_START) * 86400) AS DURATION_SEC, CASE WHEN S.TIME_REMAINING_MICRO IS NOT NULL THEN S.WAIT_CLASS END AS WAIT_CLASS, CASE WHEN S.TIME_REMAINING_MICRO IS NOT NULL THEN S.EVENT END AS EVENT, CASE WHEN S.PLSQL_ENTRY_OBJECT_ID IS NOT NULL THEN CASE WHEN P.PROCEDURE_NAME IS NULL THEN P.OWNER || '.' || P.OBJECT_NAME ELSE P.OWNER || '.' || P.OBJECT_NAME || '.' || P.PROCEDURE_NAME END END AS OBJECT_NAME, P.OBJECT_TYPE FROM V$SESSION S LEFT JOIN DBA_PROCEDURES P ON S.PLSQL_ENTRY_OBJECT_ID = P.OBJECT_ID AND S.PLSQL_ENTRY_SUBPROGRAM_ID = P.SUBPROGRAM_ID LEFT JOIN V$SQL Q ON S.SQL_ID = Q.SQL_ID WHERE S.SQL_ID IS NOT NULL AND S.STATUS = 'ACTIVE'`
+	samplesQuery = `
+	    SELECT /* collector-query */  S.MACHINE, S.USERNAME, S.SCHEMANAME, S.SQL_ID, 
+		S.SQL_CHILD_NUMBER, S.SID, S.SERIAL#, Q.SQL_FULLTEXT, S.OSUSER, S.PROCESS, 
+		S.PORT, S.PROGRAM, S.MODULE, S.STATUS, S.STATE, Q.PLAN_HASH_VALUE, 
+		ROUND((SYSDATE - SQL_EXEC_START) * 86400) AS DURATION_SEC, 
+		CASE WHEN S.TIME_REMAINING_MICRO IS NOT NULL 
+		      THEN S.WAIT_CLASS END AS WAIT_CLASS, 
+		CASE WHEN S.TIME_REMAINING_MICRO IS NOT NULL 
+		      THEN S.EVENT END AS EVENT, 
+		CASE WHEN S.PLSQL_ENTRY_OBJECT_ID IS NOT NULL 
+		      THEN CASE WHEN P.PROCEDURE_NAME IS NULL 
+			             THEN P.OWNER || '.' || P.OBJECT_NAME ELSE P.OWNER || '.' || P.OBJECT_NAME || '.' || P.PROCEDURE_NAME END 
+			  END AS OBJECT_NAME, P.OBJECT_TYPE 
+		FROM V$SESSION S LEFT JOIN DBA_PROCEDURES P ON S.PLSQL_ENTRY_OBJECT_ID = P.OBJECT_ID 
+		      AND S.PLSQL_ENTRY_SUBPROGRAM_ID = P.SUBPROGRAM_ID 
+			  LEFT JOIN V$SQL Q ON S.SQL_ID = Q.SQL_ID 
+			  WHERE S.SQL_ID IS NOT NULL AND S.STATUS = 'ACTIVE'`
 )
 
 type dbProviderFunc func() (*sql.DB, error)
@@ -506,15 +522,15 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+hostName), row[hostName])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+"id"), row[sqlID])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+"id"), row[sqlID])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+"child_number"), row[sqlChildNumber])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+"child_number"), row[sqlChildNumber])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+sid), row[sid])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+sid), row[sid])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+"serial_number"), row[serialNumber])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+"serial_number"), row[serialNumber])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+process), row[process])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+process), row[process])
 
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+username), row[username])
 
