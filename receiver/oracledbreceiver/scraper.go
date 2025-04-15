@@ -535,13 +535,13 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+process), row[process])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+"id"), row[sqlID])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+"id"), row[sqlID])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+"child_number"), row[sqlChildNumber])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+"child_number"), row[sqlChildNumber])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+sid), row[sid])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+sid), row[sid])
 
-		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+"serial_number"), row[serialNumber])
+		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+"serial_number"), row[serialNumber])
 
 		record.Attributes.PutStr(strings.ToLower(dbPrefix+queryPrefix+process), row[process])
 
