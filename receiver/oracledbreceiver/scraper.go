@@ -506,7 +506,9 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 
 	resourceLog := logs.ResourceLogs().AppendEmpty()
 	resourceAttributes := resourceLog.Resource().Attributes()
+
 	resourceAttributes.PutStr(dbPrefix+"instance.name", s.instanceName)
+
 	scopedLog := resourceLog.ScopeLogs().AppendEmpty()
 	scopedLog.Scope().SetName(metadata.ScopeName)
 	scopedLog.Scope().SetVersion("v0.0.1")
@@ -517,6 +519,7 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 		record := scopedLog.LogRecords().AppendEmpty()
 		record.SetTimestamp(pcommon.NewTimestampFromTime(time.Now()))
 
+		record.Attributes().PutStr("db.system.name", "oracle")
 		// reporting human-readable query  hash plan
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+planHashValue), queryPlanHashVal)
 
@@ -563,8 +566,10 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+osUser), row[osUser])
 
 		i, err := strconv.ParseInt(row[duration], 10, 64)
+
 		if err != nil {
-			s.logger.Error(fmt.Sprintf("oracleScraper failed to parse duration value ", err))
+			scrapeErrors = append(scrapeErrors, fmt.Errorf("failed to parse int64 for Duration, value was %s: %w", row[duration], err))
+
 		}
 		record.Attributes().PutInt(dbPrefix+queryPrefix+"duration", i)
 	}
