@@ -379,7 +379,8 @@ func TestLogScraper_ShouldExitIfDisabled(t *testing.T) {
 	scrpr.metricsBuilderConfig.Metrics.OracledbQueryElapsedTime.Enabled = false
 
 	scrpr.start(context.Background(), componenttest.NewNopHost())
-	logs, err2 := scrpr.scrapeLogs(context.Background())
+	logs := plog.NewLogs()
+	err2 := scrpr.collectTopNMetricData(context.Background(), logs)
 	assert.Nil(t, err2, "Collection should gracefully exit if OracledbQueryElapsedTime is disabled in config")
 	assert.Zero(t, logs.ResourceLogs().Len(), "Collection should not happen if OracledbQueryElapsedTime is disabled in config")
 }

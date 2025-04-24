@@ -590,14 +590,14 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 	logs := plog.NewLogs()
 	var scrapeErrors []error
 
-	samplesCollectionErrors := s.collectQuerySamples(ctx, logs)
-	if samplesCollectionErrors != nil {
-		scrapeErrors = append(scrapeErrors, samplesCollectionErrors)
-	}
-
 	topNCollectionErr := s.collectTopNMetricData(ctx, logs)
 	if topNCollectionErr != nil {
 		scrapeErrors = append(scrapeErrors, topNCollectionErr)
+	}
+
+	samplesCollectionErrors := s.collectQuerySamples(ctx, logs)
+	if samplesCollectionErrors != nil {
+		scrapeErrors = append(scrapeErrors, samplesCollectionErrors)
 	}
 
 	return logs, errors.Join(scrapeErrors...)
@@ -724,7 +724,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	var errs []error
 	if !s.queryMetricsAreEnabled() {
 		s.logger.Info("Query metrics are not enabled")
-		//return plog.NewLogs(), nil
+		return nil
 	} else {
 
 		// get metrics and query texts from DB
