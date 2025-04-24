@@ -224,6 +224,7 @@ func TestSamplesQuery(t *testing.T) {
 			}()
 			require.NoError(t, err)
 			m, err := scrpr.scrapeLogs(context.Background())
+			scrpr.collectQuerySamples()
 
 			if test.errWanted != "" {
 				//require.True(t, scrapererror.IsPartialScrapeError(err))

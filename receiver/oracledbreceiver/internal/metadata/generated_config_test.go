@@ -58,6 +58,22 @@ func TestMetricsBuilderConfig(t *testing.T) {
 					OracledbProcessesLimit:                        MetricConfig{Enabled: true},
 					OracledbProcessesUsage:                        MetricConfig{Enabled: true},
 					OracledbQueriesParallelized:                   MetricConfig{Enabled: true},
+					OracledbQueryApplicationWaitTime:              MetricConfig{Enabled: true},
+					OracledbQueryBufferGets:                       MetricConfig{Enabled: true},
+					OracledbQueryClusterWaitTime:                  MetricConfig{Enabled: true},
+					OracledbQueryConcurrencyWaitTime:              MetricConfig{Enabled: true},
+					OracledbQueryCPUTime:                          MetricConfig{Enabled: true},
+					OracledbQueryDirectReads:                      MetricConfig{Enabled: true},
+					OracledbQueryDirectWrites:                     MetricConfig{Enabled: true},
+					OracledbQueryDiskReads:                        MetricConfig{Enabled: true},
+					OracledbQueryElapsedTime:                      MetricConfig{Enabled: true},
+					OracledbQueryExecutions:                       MetricConfig{Enabled: true},
+					OracledbQueryPhysicalReadBytes:                MetricConfig{Enabled: true},
+					OracledbQueryPhysicalReadRequests:             MetricConfig{Enabled: true},
+					OracledbQueryPhysicalWriteBytes:               MetricConfig{Enabled: true},
+					OracledbQueryPhysicalWriteRequests:            MetricConfig{Enabled: true},
+					OracledbQueryRowsProcessed:                    MetricConfig{Enabled: true},
+					OracledbQueryUserIoWaitTime:                   MetricConfig{Enabled: true},
 					OracledbSessionsLimit:                         MetricConfig{Enabled: true},
 					OracledbSessionsUsage:                         MetricConfig{Enabled: true},
 					OracledbTablespaceSizeLimit:                   MetricConfig{Enabled: true},
@@ -109,6 +125,22 @@ func TestMetricsBuilderConfig(t *testing.T) {
 					OracledbProcessesLimit:                        MetricConfig{Enabled: false},
 					OracledbProcessesUsage:                        MetricConfig{Enabled: false},
 					OracledbQueriesParallelized:                   MetricConfig{Enabled: false},
+					OracledbQueryApplicationWaitTime:              MetricConfig{Enabled: false},
+					OracledbQueryBufferGets:                       MetricConfig{Enabled: false},
+					OracledbQueryClusterWaitTime:                  MetricConfig{Enabled: false},
+					OracledbQueryConcurrencyWaitTime:              MetricConfig{Enabled: false},
+					OracledbQueryCPUTime:                          MetricConfig{Enabled: false},
+					OracledbQueryDirectReads:                      MetricConfig{Enabled: false},
+					OracledbQueryDirectWrites:                     MetricConfig{Enabled: false},
+					OracledbQueryDiskReads:                        MetricConfig{Enabled: false},
+					OracledbQueryElapsedTime:                      MetricConfig{Enabled: false},
+					OracledbQueryExecutions:                       MetricConfig{Enabled: false},
+					OracledbQueryPhysicalReadBytes:                MetricConfig{Enabled: false},
+					OracledbQueryPhysicalReadRequests:             MetricConfig{Enabled: false},
+					OracledbQueryPhysicalWriteBytes:               MetricConfig{Enabled: false},
+					OracledbQueryPhysicalWriteRequests:            MetricConfig{Enabled: false},
+					OracledbQueryRowsProcessed:                    MetricConfig{Enabled: false},
+					OracledbQueryUserIoWaitTime:                   MetricConfig{Enabled: false},
 					OracledbSessionsLimit:                         MetricConfig{Enabled: false},
 					OracledbSessionsUsage:                         MetricConfig{Enabled: false},
 					OracledbTablespaceSizeLimit:                   MetricConfig{Enabled: false},
@@ -127,8 +159,9 @@ func TestMetricsBuilderConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := loadMetricsBuilderConfig(t, tt.name)
-			diff := cmp.Diff(tt.want, cfg, cmpopts.IgnoreUnexported(MetricConfig{}, ResourceAttributeConfig{}))
-			require.Emptyf(t, diff, "Config mismatch (-expected +actual):\n%s", diff)
+			if diff := cmp.Diff(tt.want, cfg, cmpopts.IgnoreUnexported(MetricConfig{}, ResourceAttributeConfig{})); diff != "" {
+				t.Errorf("Config mismatch (-expected +actual):\n%s", diff)
+			}
 		})
 	}
 }
@@ -168,8 +201,9 @@ func TestResourceAttributesConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := loadResourceAttributesConfig(t, tt.name)
-			diff := cmp.Diff(tt.want, cfg, cmpopts.IgnoreUnexported(ResourceAttributeConfig{}))
-			require.Emptyf(t, diff, "Config mismatch (-expected +actual):\n%s", diff)
+			if diff := cmp.Diff(tt.want, cfg, cmpopts.IgnoreUnexported(ResourceAttributeConfig{})); diff != "" {
+				t.Errorf("Config mismatch (-expected +actual):\n%s", diff)
+			}
 		})
 	}
 }

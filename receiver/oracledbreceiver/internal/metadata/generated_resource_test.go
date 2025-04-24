@@ -33,7 +33,7 @@ func TestResourceBuilder(t *testing.T) {
 			val, ok := res.Attributes().Get("oracledb.instance.name")
 			assert.True(t, ok)
 			if ok {
-				assert.Equal(t, "oracledb.instance.name-val", val.Str())
+				assert.EqualValues(t, "oracledb.instance.name-val", val.Str())
 			}
 		})
 	}

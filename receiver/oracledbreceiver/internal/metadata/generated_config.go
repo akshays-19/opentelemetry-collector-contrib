@@ -61,6 +61,22 @@ type MetricsConfig struct {
 	OracledbProcessesLimit                        MetricConfig `mapstructure:"oracledb.processes.limit"`
 	OracledbProcessesUsage                        MetricConfig `mapstructure:"oracledb.processes.usage"`
 	OracledbQueriesParallelized                   MetricConfig `mapstructure:"oracledb.queries_parallelized"`
+	OracledbQueryApplicationWaitTime              MetricConfig `mapstructure:"oracledb.query.application_wait_time"`
+	OracledbQueryBufferGets                       MetricConfig `mapstructure:"oracledb.query.buffer_gets"`
+	OracledbQueryClusterWaitTime                  MetricConfig `mapstructure:"oracledb.query.cluster_wait_time"`
+	OracledbQueryConcurrencyWaitTime              MetricConfig `mapstructure:"oracledb.query.concurrency_wait_time"`
+	OracledbQueryCPUTime                          MetricConfig `mapstructure:"oracledb.query.cpu_time"`
+	OracledbQueryDirectReads                      MetricConfig `mapstructure:"oracledb.query.direct_reads"`
+	OracledbQueryDirectWrites                     MetricConfig `mapstructure:"oracledb.query.direct_writes"`
+	OracledbQueryDiskReads                        MetricConfig `mapstructure:"oracledb.query.disk_reads"`
+	OracledbQueryElapsedTime                      MetricConfig `mapstructure:"oracledb.query.elapsed_time"`
+	OracledbQueryExecutions                       MetricConfig `mapstructure:"oracledb.query.executions"`
+	OracledbQueryPhysicalReadBytes                MetricConfig `mapstructure:"oracledb.query.physical_read_bytes"`
+	OracledbQueryPhysicalReadRequests             MetricConfig `mapstructure:"oracledb.query.physical_read_requests"`
+	OracledbQueryPhysicalWriteBytes               MetricConfig `mapstructure:"oracledb.query.physical_write_bytes"`
+	OracledbQueryPhysicalWriteRequests            MetricConfig `mapstructure:"oracledb.query.physical_write_requests"`
+	OracledbQueryRowsProcessed                    MetricConfig `mapstructure:"oracledb.query.rows_processed"`
+	OracledbQueryUserIoWaitTime                   MetricConfig `mapstructure:"oracledb.query.user_io_wait_time"`
 	OracledbSessionsLimit                         MetricConfig `mapstructure:"oracledb.sessions.limit"`
 	OracledbSessionsUsage                         MetricConfig `mapstructure:"oracledb.sessions.usage"`
 	OracledbTablespaceSizeLimit                   MetricConfig `mapstructure:"oracledb.tablespace_size.limit"`
@@ -170,6 +186,54 @@ func DefaultMetricsConfig() MetricsConfig {
 			Enabled: true,
 		},
 		OracledbQueriesParallelized: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryApplicationWaitTime: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryBufferGets: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryClusterWaitTime: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryConcurrencyWaitTime: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryCPUTime: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryDirectReads: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryDirectWrites: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryDiskReads: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryElapsedTime: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryExecutions: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryPhysicalReadBytes: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryPhysicalReadRequests: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryPhysicalWriteBytes: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryPhysicalWriteRequests: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryRowsProcessed: MetricConfig{
+			Enabled: false,
+		},
+		OracledbQueryUserIoWaitTime: MetricConfig{
 			Enabled: false,
 		},
 		OracledbSessionsLimit: MetricConfig{

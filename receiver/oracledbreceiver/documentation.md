@@ -369,6 +369,134 @@ Number of SELECT statements executed in parallel
 | ---- | ----------- | ---------- | ----------------------- | --------- |
 | {queries} | Sum | Int | Cumulative | true |
 
+### oracledb.query.application_wait_time
+
+Application wait time
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | false |
+
+### oracledb.query.buffer_gets
+
+Number of buffer gets
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| count | Sum | Int | Cumulative | false |
+
+### oracledb.query.cluster_wait_time
+
+Cluster wait time
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | false |
+
+### oracledb.query.concurrency_wait_time
+
+Concurrency wait time
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | false |
+
+### oracledb.query.cpu_time
+
+CPU time
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | false |
+
+### oracledb.query.direct_reads
+
+Number of direct reads
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| count | Sum | Int | Cumulative | false |
+
+### oracledb.query.direct_writes
+
+Number of direct writes
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| count | Sum | Int | Cumulative | false |
+
+### oracledb.query.disk_reads
+
+Number of disk reads
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| count | Sum | Int | Cumulative | false |
+
+### oracledb.query.elapsed_time
+
+Elapsed time
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | false |
+
+### oracledb.query.executions
+
+Number of executions
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| count | Sum | Int | Cumulative | false |
+
+### oracledb.query.physical_read_bytes
+
+Number of bytes read
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| By | Sum | Int | Cumulative | false |
+
+### oracledb.query.physical_read_requests
+
+Number of physical read requests
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| count | Sum | Int | Cumulative | false |
+
+### oracledb.query.physical_write_bytes
+
+Number of bytes written
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| By | Sum | Int | Cumulative | false |
+
+### oracledb.query.physical_write_requests
+
+Number of physical write requests
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| count | Sum | Int | Cumulative | false |
+
+### oracledb.query.rows_processed
+
+Number of rows returned
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| count | Sum | Int | Cumulative | false |
+
+### oracledb.query.user_io_wait_time
+
+User IO wait time
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | false |
+
 ## Resource Attributes
 
 | Name | Description | Values | Enabled |

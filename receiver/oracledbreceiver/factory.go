@@ -6,11 +6,13 @@ package oracledbreceiver // import "github.com/open-telemetry/opentelemetry-coll
 import (
 	"context"
 	"database/sql"
+	"go.uber.org/zap"
 	"net"
 	"net/url"
 	"strconv"
 	"time"
 
+	lru "github.com/hashicorp/golang-lru/v2"
 	go_ora "github.com/sijms/go-ora/v2"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
@@ -41,6 +43,11 @@ func createDefaultConfig() component.Config {
 	return &Config{
 		ControllerConfig:     cfg,
 		MetricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
+		TopQueryCollection: TopQueryCollection{
+			MaxQuerySampleCount: 1000,
+			TopQueryCount:       200,
+			QueryCacheSize:      5000,
+		},
 	}
 }
 
@@ -86,20 +93,28 @@ func createLogsReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clie
 		logsConsumer consumer.Logs,
 	) (receiver.Logs, error) {
 		sqlCfg := cfg.(*Config)
+		metricsBuilder := metadata.NewMetricsBuilder(sqlCfg.MetricsBuilderConfig, settings)
 
 		instanceName, err := getInstanceName(getDataSource(*sqlCfg))
 		if err != nil {
 			return nil, err
 		}
 
-		mp, err := newLogsScraper(sqlCfg.ControllerConfig, settings.TelemetrySettings.Logger, func() (*sql.DB, error) {
-			return sqlOpenerFunc(getDataSource(*sqlCfg))
-		}, clientProviderFunc, instanceName)
-
+		cacheSize := sqlCfg.QueryCacheSize
+		metricCache, err := lru.New[string, map[string]int64](cacheSize)
 		if err != nil {
+			settings.TelemetrySettings.Logger.Error("Failed to create LRU cache, skipping the current scraper", zap.Error(err))
 			return nil, err
 		}
 
+		mp, err := newLogsScraper(metricsBuilder, sqlCfg.MetricsBuilderConfig, sqlCfg.ControllerConfig, settings.TelemetrySettings.Logger, func() (*sql.DB, error) {
+			return sqlOpenerFunc(getDataSource(*sqlCfg))
+		}, clientProviderFunc, instanceName, metricCache, sqlCfg.MaxQuerySampleCount, sqlCfg.TopQueryCount)
+		if err != nil {
+			return nil, err
+		}
+		// adding a logs scraper is still not properly implemented in the helper, so we need to c&p some of that code here
+		// to make a logs scraper work
 		f := scraper.NewFactory(metadata.Type, nil,
 			scraper.WithLogs(func(context.Context, scraper.Settings, component.Config) (scraper.Logs, error) {
 				return mp, nil
