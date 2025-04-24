@@ -595,7 +595,7 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 		scrapeErrors = append(scrapeErrors, samplesCollectionErrors)
 	}
 
-	topNCollectionErr := collectTopNMetricData(s, ctx, logs)
+	topNCollectionErr := s.collectTopNMetricData(ctx, logs)
 	if topNCollectionErr != nil {
 		scrapeErrors = append(scrapeErrors, topNCollectionErr)
 	}
@@ -720,7 +720,7 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 	return errors.Join(scrapeErrors...)
 }
 
-func collectTopNMetricData(s *oracleScraper, ctx context.Context, logs plog.Logs) error {
+func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Logs) error {
 	var errs []error
 	if !s.queryMetricsAreEnabled() {
 		s.logger.Info("Query metrics are not enabled")
