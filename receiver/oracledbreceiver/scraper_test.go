@@ -360,7 +360,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 
 }
 
-func TestLogScraper_ShouldExitIfDisabled(t *testing.T) {
+func TestTopNCollection_ShouldExitIfDisabled(t *testing.T) {
 	cfg := metadata.DefaultMetricsBuilderConfig()
 	lruCache, _ := lru.New[string, map[string]int64](500)
 	scrpr := oracleScraper{
