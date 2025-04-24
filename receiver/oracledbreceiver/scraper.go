@@ -924,8 +924,6 @@ func (s *oracleScraper) getChildAddressToPlanMap(ctx context.Context, hits []que
 	s.oraclePlanDataClient = s.clientProviderFunc(s.db, sqlQuery, s.logger)
 	planData, _ := s.oraclePlanDataClient.metricRows(ctx, childAddressSlice...)
 
-	s.logger.Info(fmt.Sprintf("Plan data siez >>>>>>>>> %d", len(planData)))
-
 	for _, row := range planData {
 		currentChildAddress := row[childAddressAttr]
 		jsonPlansSlice, ok := childAddressToPlanMap[currentChildAddress]
