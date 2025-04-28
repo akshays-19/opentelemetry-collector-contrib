@@ -67,38 +67,6 @@ all_set:
       enabled: true
     oracledb.queries_parallelized:
       enabled: true
-    oracledb.query.application_wait_time:
-      enabled: true
-    oracledb.query.buffer_gets:
-      enabled: true
-    oracledb.query.cluster_wait_time:
-      enabled: true
-    oracledb.query.concurrency_wait_time:
-      enabled: true
-    oracledb.query.cpu_time:
-      enabled: true
-    oracledb.query.direct_reads:
-      enabled: true
-    oracledb.query.direct_writes:
-      enabled: true
-    oracledb.query.disk_reads:
-      enabled: true
-    oracledb.query.elapsed_time:
-      enabled: true
-    oracledb.query.executions:
-      enabled: true
-    oracledb.query.physical_read_bytes:
-      enabled: true
-    oracledb.query.physical_read_requests:
-      enabled: true
-    oracledb.query.physical_write_bytes:
-      enabled: true
-    oracledb.query.physical_write_requests:
-      enabled: true
-    oracledb.query.rows_processed:
-      enabled: true
-    oracledb.query.user_io_wait_time:
-      enabled: true
     oracledb.sessions.limit:
       enabled: true
     oracledb.sessions.usage:
@@ -185,38 +153,6 @@ none_set:
     oracledb.processes.usage:
       enabled: false
     oracledb.queries_parallelized:
-      enabled: false
-    oracledb.query.application_wait_time:
-      enabled: false
-    oracledb.query.buffer_gets:
-      enabled: false
-    oracledb.query.cluster_wait_time:
-      enabled: false
-    oracledb.query.concurrency_wait_time:
-      enabled: false
-    oracledb.query.cpu_time:
-      enabled: false
-    oracledb.query.direct_reads:
-      enabled: false
-    oracledb.query.direct_writes:
-      enabled: false
-    oracledb.query.disk_reads:
-      enabled: false
-    oracledb.query.elapsed_time:
-      enabled: false
-    oracledb.query.executions:
-      enabled: false
-    oracledb.query.physical_read_bytes:
-      enabled: false
-    oracledb.query.physical_read_requests:
-      enabled: false
-    oracledb.query.physical_write_bytes:
-      enabled: false
-    oracledb.query.physical_write_requests:
-      enabled: false
-    oracledb.query.rows_processed:
-      enabled: false
-    oracledb.query.user_io_wait_time:
       enabled: false
     oracledb.sessions.limit:
       enabled: false

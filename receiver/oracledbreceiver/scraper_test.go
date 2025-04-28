@@ -6,9 +6,12 @@ package oracledbreceiver
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"go.opentelemetry.io/collector/pdata/plog"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -17,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenttest"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/receiver/receivertest"
 	"go.opentelemetry.io/collector/scraper/scrapererror"
@@ -42,13 +46,27 @@ var queryResponses = map[string][]metricRow{
 		{"RESOURCE_NAME": "processes", "CURRENT_UTILIZATION": "3", "MAX_UTILIZATION": "10", "INITIAL_ALLOCATION": "100", "LIMIT_VALUE": "100"},
 		{"RESOURCE_NAME": "locks", "CURRENT_UTILIZATION": "3", "MAX_UTILIZATION": "10", "INITIAL_ALLOCATION": "-1", "LIMIT_VALUE": "-1"},
 	},
-	tablespaceUsageSQL:     {{"TABLESPACE_NAME": "SYS", "USED_SPACE": "111288", "TABLESPACE_SIZE": "3518587", "BLOCK_SIZE": "8192"}},
-	oracleQueryMetricsData: {{"APPLICATION_WAIT_TIME": "0", "BUFFER_GETS": "3997614", "CHILD_ADDRESS": "0000000074C6E830", "CHILD_NUMBER": "0", "CLUSTER_WAIT_TIME": "2000", "CONCURRENCY_WAIT_TIME": "30", "CPU_TIME": "39736887", "DIRECT_READS": "5", "DIRECT_WRITES": "10", "DISK_READS": "15", "ELAPSED_TIME": "99172810", "EXECUTIONS": "300413", "PHYSICAL_READ_BYTES": "400", "PHYSICAL_READ_REQUESTS": "500", "PHYSICAL_WRITE_BYTES": "18", "PHYSICAL_WRITE_REQUESTS": "150", "ROWS_PROCESSED": "399856", "SQL_FULLTEXT": "SELECT COUNT(*) AS TotalHighRateEmployees FROM ADMIN.\"Employee\" e \nJOIN ADMIN.\"Person\" p ON e.\"BusinessEntityID\" = \"BusId1234\" \nJOIN ADMIN.\"EmployeePayHistory\" eph ON e.\"BusinessEntityID\" = eph.\"BusinessEntityID\" WHERE eph.\"Rate\" \u003e \n(SELECT AVG(\"Rate\") FROM ADMIN.\"EmployeePayHistory\")", "SQL_ID": "fxk8aq3nds8aw", "USER_IO_WAIT_TIME": "220"}},
-	oracleQueryPlanData:    {{"ACCESS_PREDICATES": "", "BYTES": "", "CARDINALITY": "", "CHILD_ADDRESS": "0000000074C6E830", "COST": "1", "CPU_COST": "", "DEPTH": "0", "ID": "0", "IO_COST": "", "OPERATION": "SELECT STATEMENT", "PARENT_ID": "", "POSITION": "1", "PROJECTION": ""}},
+	tablespaceUsageSQL: {{"TABLESPACE_NAME": "SYS", "USED_SPACE": "111288", "TABLESPACE_SIZE": "3518587", "BLOCK_SIZE": "8192"}},
 }
 
-var cacheValue = map[string]int64{"APPLICATION_WAIT_TIME": 0, "BUFFER_GETS": 3808197, "CLUSTER_WAIT_TIME": 1000, "CONCURRENCY_WAIT_TIME": 20, "CPU_TIME": 29821063, "DIRECT_READS": 3, "DIRECT_WRITES": 6, "DISK_READS": 12, "ELAPSED_TIME": 38172810, "EXECUTIONS": 200413, "PHYSICAL_READ_BYTES": 300, "PHYSICAL_READ_REQUESTS": 100, "PHYSICAL_WRITE_BYTES": 12, "PHYSICAL_WRITE_REQUESTS": 120, "ROWS_PROCESSED": 200413, "USER_IO_WAIT_TIME": 200}
-var planJsonText = "[{\"ACCESS_PREDICATES\":\"\",\"BYTES\":\"\",\"CARDINALITY\":\"\",\"COST\":\"1\",\"CPU_COST\":\"\",\"DEPTH\":\"0\",\"ID\":\"0\",\"IO_COST\":\"\",\"OPERATION\":\"SELECT STATEMENT\",\"PARENT_ID\":\"\",\"POSITION\":\"1\",\"PROJECTION\":\"\"}]"
+var cacheValue = map[string]int64{
+	"APPLICATION_WAIT_TIME":   0,
+	"BUFFER_GETS":             3808197,
+	"CLUSTER_WAIT_TIME":       1000,
+	"CONCURRENCY_WAIT_TIME":   20,
+	"CPU_TIME":                29821063,
+	"DIRECT_READS":            3,
+	"DIRECT_WRITES":           6,
+	"DISK_READS":              12,
+	"ELAPSED_TIME":            38172810,
+	"EXECUTIONS":              200413,
+	"PHYSICAL_READ_BYTES":     300,
+	"PHYSICAL_READ_REQUESTS":  100,
+	"PHYSICAL_WRITE_BYTES":    12,
+	"PHYSICAL_WRITE_REQUESTS": 120,
+	"ROWS_PROCESSED":          200413,
+	"USER_IO_WAIT_TIME":       200,
+}
 
 func TestScraper_Scrape(t *testing.T) {
 	tests := []struct {
@@ -250,6 +268,7 @@ func TestSamplesQuery(t *testing.T) {
 }
 
 func TestScraper_ScrapeLogs(t *testing.T) {
+	var metricRowData []metricRow
 	tests := []struct {
 		name       string
 		dbclientFn func(db *sql.DB, s string, logger *zap.Logger) dbClient
@@ -259,16 +278,20 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 			name: "valid collection",
 			dbclientFn: func(_ *sql.DB, s string, _ *zap.Logger) dbClient {
 				if strings.Contains(s, "V$SQL_PLAN") {
+					metricRowFile := readFile("oracleQueryPlanData.txt")
+					json.Unmarshal(metricRowFile, &metricRowData)
 					return &fakeDbClient{
 						Responses: [][]metricRow{
-							queryResponses[oracleQueryPlanData],
+							metricRowData,
 						},
 					}
 
 				} else {
+					metricRowFile := readFile("oracleQueryMetricsData.txt")
+					json.Unmarshal(metricRowFile, &metricRowData)
 					return &fakeDbClient{
 						Responses: [][]metricRow{
-							queryResponses[oracleQueryMetricsData],
+							metricRowData,
 						},
 					}
 				}
@@ -318,12 +341,6 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 				topQueryCount:        200,
 			}
 
-			scrpr.metricsBuilderConfig.Metrics.OracledbQueryElapsedTime.Enabled = true
-			scrpr.metricsBuilderConfig.Metrics.OracledbQueryExecutions.Enabled = true
-			scrpr.metricsBuilderConfig.Metrics.OracledbQueryDiskReads.Enabled = true
-			scrpr.metricsBuilderConfig.Metrics.OracledbQueryDirectWrites.Enabled = true
-			scrpr.metricsBuilderConfig.Metrics.OracledbQueryBufferGets.Enabled = true
-
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
 			defer func() {
 				assert.NoError(t, scrpr.shutdown(context.Background()))
@@ -338,7 +355,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, 1, logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().Len(), "Query metrics has not been added to LogRecords")
-				assert.Equal(t, 9, logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Len(), "Metric data missing in LogRecord")
+				assert.Equal(t, 20, logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Len(), "Metric data missing in LogRecord")
 				elapsedTimeValue, _ := logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("oracledb.query.elapsed_time")
 				assert.Equal(t, 61, int(elapsedTimeValue.Double()), "Metric value calculation error")
 				executionsValue, _ := logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("oracledb.query.executions")
@@ -351,8 +368,13 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 				assert.False(t, strings.Contains(queryText.AsString(), "BusId1234"), "Obfuscation failure")
 
 				planText, _ := logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("oracledb.query_plan")
-				assert.Equal(t, planJsonText, planText.AsString(), "Plan text not accurate")
+				assert.Equal(t, string(readFile("planJsonTextOutput.txt")), planText.AsString(), "Plan text not accurate")
 
+				logsMarshaller := plog.JSONMarshaler{}
+				logBytes, _ := logsMarshaller.MarshalLogs(logs)
+				assert.Equal(t, fmt.Sprintf(string(readFile("logsFinalOutput.txt")),
+					logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Timestamp().AsTime().UnixNano()),
+					string(logBytes))
 			}
 
 		})
@@ -360,27 +382,10 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 
 }
 
-func TestTopNCollection_ShouldExitIfDisabled(t *testing.T) {
-	cfg := metadata.DefaultMetricsBuilderConfig()
-	lruCache, _ := lru.New[string, map[string]int64](500)
-	scrpr := oracleScraper{
-		logger: zap.NewNop(),
-		mb:     metadata.NewMetricsBuilder(cfg, receivertest.NewNopSettings(receivertest.NopType)),
-		dbProviderFunc: func() (*sql.DB, error) {
-			return nil, nil
-		},
-		clientProviderFunc:   func(_ *sql.DB, s string, _ *zap.Logger) dbClient { return &fakeDbClient{} },
-		id:                   component.ID{},
-		metricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
-		metricCache:          lruCache,
-		topQueryCount:        200,
+func readFile(fname string) []byte {
+	file, err := os.ReadFile(filepath.Join("testdata", fname))
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	scrpr.metricsBuilderConfig.Metrics.OracledbQueryElapsedTime.Enabled = false
-
-	scrpr.start(context.Background(), componenttest.NewNopHost())
-	logs := plog.NewLogs()
-	err2 := scrpr.collectTopNMetricData(context.Background(), logs)
-	assert.Nil(t, err2, "Collection should gracefully exit if OracledbQueryElapsedTime is disabled in config")
-	assert.Zero(t, logs.ResourceLogs().Len(), "Collection should not happen if OracledbQueryElapsedTime is disabled in config")
+	return file
 }
