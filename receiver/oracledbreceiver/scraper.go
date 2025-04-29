@@ -650,6 +650,7 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 
 		queryPlanHashVal := hex.EncodeToString([]byte(row[planHashValue]))
 		record := scopedLog.LogRecords().AppendEmpty()
+		record.SetEventName("db.server.query_sample")
 		record.SetTimestamp(pcommon.NewTimestampFromTime(time.Now()))
 
 		record.Attributes().PutStr("db.system.name", "oracle")
@@ -715,6 +716,7 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 
 		}
 		record.Attributes().PutInt(dbPrefix+queryPrefix+"duration", i)
+
 	}
 
 	return errors.Join(scrapeErrors...)
@@ -847,7 +849,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	for _, hit := range hits {
 		record := scopedLog.LogRecords().AppendEmpty()
 		record.SetTimestamp(timestamp)
-		record.SetEventName("top query")
+		record.SetEventName("db.server.top_query")
 
 		for _, columnName := range enabledColumns {
 			columnValue := hit.metrics[columnName]

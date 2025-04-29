@@ -338,7 +338,6 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 				id:                   component.ID{},
 				metricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
 				metricCache:          lruCache,
-				topQueryCount:        200,
 			}
 
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
