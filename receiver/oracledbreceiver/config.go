@@ -30,9 +30,14 @@ var (
 )
 
 type TopQueryCollection struct {
+	Enabled             bool `mapstructure:"enabled"`
 	MaxQuerySampleCount uint `mapstructure:"max_query_sample_count"`
 	TopQueryCount       uint `mapstructure:"top_query_count"`
 	QueryCacheSize      int  `mapstructure:"query_cache_size"`
+}
+
+type QuerySample struct {
+	Enabled bool `mapstructure:"enabled"`
 }
 
 type Config struct {
@@ -45,6 +50,7 @@ type Config struct {
 	metadata.MetricsBuilderConfig  `mapstructure:",squash"`
 
 	TopQueryCollection `mapstructure:"top_query_collection"`
+	QuerySample        `mapstructure:"query_sample_collection"`
 }
 
 func (c Config) Validate() error {

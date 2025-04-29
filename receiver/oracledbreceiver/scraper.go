@@ -199,8 +199,8 @@ type oracleScraper struct {
 	startTime                  pcommon.Timestamp
 	metricsBuilderConfig       metadata.MetricsBuilderConfig
 	metricCache                *lru.Cache[string, map[string]int64]
-	maxQuerySampleCount        uint
-	topQueryCount              uint
+	topQueryCollectCfg         TopQueryCollection
+	querySampleCfg             QuerySample
 }
 
 func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig, logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string) (scraper.Metrics, error) {
@@ -218,7 +218,7 @@ func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig me
 
 func newLogsScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig,
 	logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string, metricCache *lru.Cache[string, map[string]int64],
-	maxQuerySampleCount uint, topQueryCount uint) (scraper.Logs, error) {
+	topQueryCollectCfg TopQueryCollection, querySampleCfg QuerySample) (scraper.Logs, error) {
 	s := &oracleScraper{
 		mb:                   metricsBuilder,
 		metricsBuilderConfig: metricsBuilderConfig,
@@ -228,8 +228,8 @@ func newLogsScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfi
 		clientProviderFunc:   clientProviderFunc,
 		instanceName:         instanceName,
 		metricCache:          metricCache,
-		maxQuerySampleCount:  maxQuerySampleCount,
-		topQueryCount:        topQueryCount,
+		topQueryCollectCfg:   topQueryCollectCfg,
+		querySampleCfg:       querySampleCfg,
 	}
 	return scraper.NewLogs(s.scrapeLogs, scraper.WithShutdown(s.shutdown), scraper.WithStart(s.start))
 
@@ -586,14 +586,18 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 	logs := plog.NewLogs()
 	var scrapeErrors []error
 
-	topNCollectionErr := s.collectTopNMetricData(ctx, logs)
-	if topNCollectionErr != nil {
-		scrapeErrors = append(scrapeErrors, topNCollectionErr)
+	if s.topQueryCollectCfg.Enabled {
+		topNCollectionErr := s.collectTopNMetricData(ctx, logs)
+		if topNCollectionErr != nil {
+			scrapeErrors = append(scrapeErrors, topNCollectionErr)
+		}
 	}
 
-	samplesCollectionErrors := s.collectQuerySamples(ctx, logs)
-	if samplesCollectionErrors != nil {
-		scrapeErrors = append(scrapeErrors, samplesCollectionErrors)
+	if s.querySampleCfg.Enabled {
+		samplesCollectionErrors := s.collectQuerySamples(ctx, logs)
+		if samplesCollectionErrors != nil {
+			scrapeErrors = append(scrapeErrors, samplesCollectionErrors)
+		}
 	}
 
 	return logs, errors.Join(scrapeErrors...)
@@ -723,7 +727,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	intervalSeconds := int(s.scrapeCfg.CollectionInterval.Seconds())
 	s.oracleQueryMetricsClient = s.clientProviderFunc(s.db, oracleQueryMetricsData, s.logger)
 	now := timestamp.AsTime().Format(dbTimeReferenceFormat)
-	metricRows, metricError := s.oracleQueryMetricsClient.metricRows(ctx, now, intervalSeconds, s.maxQuerySampleCount)
+	metricRows, metricError := s.oracleQueryMetricsClient.metricRows(ctx, now, intervalSeconds, s.topQueryCollectCfg.MaxQuerySampleCount)
 
 	if metricError != nil {
 		errs = append(errs, fmt.Errorf("error executing %s: %w", oracleQueryMetricsData, metricError))
@@ -817,7 +821,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 
 	// keep at most maxHitSize
 	hitCountBefore := len(hits)
-	maxHitsSize := min(len(hits), int(s.topQueryCount))
+	maxHitsSize := min(len(hits), int(s.topQueryCollectCfg.TopQueryCount))
 	hits = hits[:maxHitsSize]
 	skippedCacheHits := hitCountBefore - len(hits)
 	s.logger.Info("Skipped cache hits", zap.Int("count", skippedCacheHits))
