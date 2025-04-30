@@ -244,14 +244,14 @@ func TestSamplesQuery(t *testing.T) {
 				},
 				clientProviderFunc: test.dbclientFn,
 				id:                 component.ID{},
+				querySampleCfg:     QuerySample{Enabled: true},
 			}
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
 			defer func() {
 				assert.NoError(t, scrpr.shutdown(context.Background()))
 			}()
 			require.NoError(t, err)
-			m := plog.NewLogs()
-			err = scrpr.collectQuerySamples(context.Background(), m)
+			m, err := scrpr.scrapeLogs(context.Background())
 
 			if test.errWanted != "" {
 				//require.True(t, scrapererror.IsPartialScrapeError(err))
@@ -338,6 +338,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 				id:                   component.ID{},
 				metricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
 				metricCache:          lruCache,
+				topQueryCollectCfg:   TopQueryCollection{Enabled: true, MaxQuerySampleCount: 5000, TopQueryCount: 200},
 			}
 
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
@@ -347,7 +348,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 			require.NoError(t, err)
 
 			logs := plog.NewLogs()
-			err = scrpr.collectTopNMetricData(context.Background(), logs)
+			logs, err = scrpr.scrapeLogs(context.Background())
 
 			if test.errWanted != "" {
 				require.EqualError(t, err, test.errWanted)

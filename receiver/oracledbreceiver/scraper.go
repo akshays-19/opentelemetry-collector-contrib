@@ -803,7 +803,6 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 
 	if len(hits) == 0 {
 		s.logger.Info("No log records for this scrape")
-		// TODO: this will send '{}' line anyway
 		return errors.Join(errs...)
 	}
 
