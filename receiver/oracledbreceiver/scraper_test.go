@@ -269,6 +269,7 @@ func TestSamplesQuery(t *testing.T) {
 
 func TestScraper_ScrapeLogs(t *testing.T) {
 	var metricRowData []metricRow
+	var logRowData []metricRow
 	tests := []struct {
 		name       string
 		dbclientFn func(db *sql.DB, s string, logger *zap.Logger) dbClient
@@ -279,10 +280,10 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 			dbclientFn: func(_ *sql.DB, s string, _ *zap.Logger) dbClient {
 				if strings.Contains(s, "V$SQL_PLAN") {
 					metricRowFile := readFile("oracleQueryPlanData.txt")
-					json.Unmarshal(metricRowFile, &metricRowData)
+					json.Unmarshal(metricRowFile, &logRowData)
 					return &fakeDbClient{
 						Responses: [][]metricRow{
-							metricRowData,
+							logRowData,
 						},
 					}
 
@@ -316,7 +317,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 					Err: errors.New("Mock error"),
 				}
 			},
-			errWanted: fmt.Sprintf("error executing %s: %s", oracleQueryMetricsData, "Mock error"),
+			errWanted: fmt.Sprintf("error executing %s: %s", oracleQueryMetricsSql, "Mock error"),
 		},
 	}
 

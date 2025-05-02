@@ -6,6 +6,7 @@ package oracledbreceiver // import "github.com/open-telemetry/opentelemetry-coll
 import (
 	"context"
 	"database/sql"
+	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -63,69 +64,13 @@ const (
 		select um.TABLESPACE_NAME, um.USED_SPACE, um.TABLESPACE_SIZE, ts.BLOCK_SIZE
 		FROM DBA_TABLESPACE_USAGE_METRICS um INNER JOIN DBA_TABLESPACES ts
 		ON um.TABLESPACE_NAME = ts.TABLESPACE_NAME`
-	samplesQuery = `
-	    /* collector-query */ SELECT S.MACHINE, S.USERNAME, S.SCHEMANAME, S.SQL_ID, 
-		S.SQL_CHILD_NUMBER, S.SID, S.SERIAL#, Q.SQL_FULLTEXT, S.OSUSER, S.PROCESS, 
-		S.PORT, S.PROGRAM, S.MODULE, S.STATUS, S.STATE, Q.PLAN_HASH_VALUE, 
-		ROUND((SYSDATE - SQL_EXEC_START) * 86400) AS DURATION_SEC, 
-		CASE WHEN S.TIME_REMAINING_MICRO IS NOT NULL 
-		      THEN S.WAIT_CLASS END AS WAIT_CLASS, 
-		CASE WHEN S.TIME_REMAINING_MICRO IS NOT NULL 
-		      THEN S.EVENT END AS EVENT, 
-		CASE WHEN S.PLSQL_ENTRY_OBJECT_ID IS NOT NULL 
-		      THEN CASE WHEN P.PROCEDURE_NAME IS NULL 
-			             THEN P.OWNER || '.' || P.OBJECT_NAME ELSE P.OWNER || '.' || P.OBJECT_NAME || '.' || P.PROCEDURE_NAME END 
-			  END AS OBJECT_NAME, P.OBJECT_TYPE 
-		FROM V$SESSION S LEFT JOIN DBA_PROCEDURES P ON S.PLSQL_ENTRY_OBJECT_ID = P.OBJECT_ID 
-		      AND S.PLSQL_ENTRY_SUBPROGRAM_ID = P.SUBPROGRAM_ID 
-			  LEFT JOIN V$SQL Q ON S.SQL_ID = Q.SQL_ID 
-			  WHERE S.SQL_ID IS NOT NULL AND S.STATUS = 'ACTIVE'`
-	dbTimeReferenceFormat  = "2006-01-02 15:04:05"
-	sqlIDAttr              = "SQL_ID"
-	childAddressAttr       = "CHILD_ADDRESS"
-	childNumberAttr        = "CHILD_NUMBER"
-	sqlTextAttr            = "SQL_FULLTEXT"
-	oracleQueryMetricsData = `/* collector-query */ SELECT
-							   SQL_ID,
-							   SQL_FULLTEXT,
-							   CHILD_NUMBER,
-							   RAWTOHEX(CHILD_ADDRESS) AS CHILD_ADDRESS,
-							   EXECUTIONS,
-							   ELAPSED_TIME,
-							   CPU_TIME,
-							   APPLICATION_WAIT_TIME,
-							   CONCURRENCY_WAIT_TIME,
-							   USER_IO_WAIT_TIME,
-							   CLUSTER_WAIT_TIME,
-							   ROWS_PROCESSED,
-							   BUFFER_GETS,
-							   PHYSICAL_WRITE_REQUESTS,
-							   PHYSICAL_READ_REQUESTS,
-							   PHYSICAL_WRITE_BYTES,
-							   PHYSICAL_READ_BYTES,
-							   DISK_READS,
-							   DIRECT_WRITES,
-							   DIRECT_READS
-							   FROM V$SQL
-							   WHERE LAST_ACTIVE_TIME >= TO_DATE(:1, 'yyyy-mm-dd hh24:mi:ss') - NUMTODSINTERVAL(:2, 'SECOND')
-							   FETCH FIRST :3 ROWS ONLY`
+	dbPrefix = "oracledb."
 
-	oracleQueryPlanData = `/* collector-query */ SELECT
-    						RAWTOHEX(CHILD_ADDRESS) AS CHILD_ADDRESS,
-							ACCESS_PREDICATES,
-							COST,
-							IO_COST,
-							CARDINALITY,
-							DEPTH,
-							BYTES,
-							PARENT_ID,
-							CPU_COST,
-							ID,
-							POSITION,
-							PROJECTION,
-							OPERATION
-							FROM V$SQL_PLAN
-							WHERE CHILD_ADDRESS IN (%s)`
+	dbTimeReferenceFormat = "2006-01-02 15:04:05"
+	sqlIDAttr             = "SQL_ID"
+	childAddressAttr      = "CHILD_ADDRESS"
+	childNumberAttr       = "CHILD_NUMBER"
+	sqlTextAttr           = "SQL_FULLTEXT"
 
 	queryExecutionMetric        = "EXECUTIONS"
 	elapsedTimeMetric           = "ELAPSED_TIME"
@@ -146,6 +91,14 @@ const (
 )
 
 var (
+
+	//go:embed templates/oracleQuerySampleSql.tmpl
+	samplesQuery string
+	//go:embed templates/oracleQueryMetricsAndTextSql.tmpl
+	oracleQueryMetricsSql string
+	//go:embed templates/oracleQueryPlanSql.tmpl
+	oracleQueryPlanDataSql string
+
 	microSecColumnNames = map[string]bool{
 		elapsedTimeMetric:         true,
 		cpuTimeMetric:             true,
@@ -195,6 +148,7 @@ type oracleScraper struct {
 	logger                     *zap.Logger
 	id                         component.ID
 	instanceName               string
+	hostName                   string
 	scrapeCfg                  scraperhelper.ControllerConfig
 	startTime                  pcommon.Timestamp
 	metricsBuilderConfig       metadata.MetricsBuilderConfig
@@ -218,7 +172,7 @@ func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig me
 
 func newLogsScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig,
 	logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string, metricCache *lru.Cache[string, map[string]int64],
-	topQueryCollectCfg TopQueryCollection, querySampleCfg QuerySample) (scraper.Logs, error) {
+	topQueryCollectCfg TopQueryCollection, querySampleCfg QuerySample, hostName string) (scraper.Logs, error) {
 	s := &oracleScraper{
 		mb:                   metricsBuilder,
 		metricsBuilderConfig: metricsBuilderConfig,
@@ -230,6 +184,7 @@ func newLogsScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfi
 		metricCache:          metricCache,
 		topQueryCollectCfg:   topQueryCollectCfg,
 		querySampleCfg:       querySampleCfg,
+		hostName:             hostName,
 	}
 	return scraper.NewLogs(s.scrapeLogs, scraper.WithShutdown(s.shutdown), scraper.WithStart(s.start))
 
@@ -604,7 +559,6 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 }
 
 func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs) error {
-	const dbPrefix = "oracledb."
 	const queryPrefix = "query."
 	const duration = "DURATION_SEC"
 	const event = "EVENT"
@@ -641,6 +595,7 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 	resourceAttributes := resourceLog.Resource().Attributes()
 
 	resourceAttributes.PutStr(dbPrefix+"instance.name", s.instanceName)
+	resourceAttributes.PutStr("host.name", s.hostName)
 
 	scopedLog := resourceLog.ScopeLogs().AppendEmpty()
 	scopedLog.Scope().SetName(metadata.ScopeName)
@@ -727,12 +682,12 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	// get metrics and query texts from DB
 	timestamp := pcommon.NewTimestampFromTime(time.Now())
 	intervalSeconds := int(s.scrapeCfg.CollectionInterval.Seconds())
-	s.oracleQueryMetricsClient = s.clientProviderFunc(s.db, oracleQueryMetricsData, s.logger)
+	s.oracleQueryMetricsClient = s.clientProviderFunc(s.db, oracleQueryMetricsSql, s.logger)
 	now := timestamp.AsTime().Format(dbTimeReferenceFormat)
 	metricRows, metricError := s.oracleQueryMetricsClient.metricRows(ctx, now, intervalSeconds, s.topQueryCollectCfg.MaxQuerySampleCount)
 
 	if metricError != nil {
-		errs = append(errs, fmt.Errorf("error executing %s: %w", oracleQueryMetricsData, metricError))
+		errs = append(errs, fmt.Errorf("error executing %s: %w", oracleQueryMetricsSql, metricError))
 		return errors.Join(errs...)
 	}
 
@@ -837,9 +792,9 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 
 	resourceAttributes := topNResourceLog.Resource().Attributes()
 	if s.metricsBuilderConfig.ResourceAttributes.OracledbInstanceName.Enabled {
-		resourceAttributes.PutStr("instance.name", s.instanceName)
+		resourceAttributes.PutStr(dbPrefix+"instance.name", s.instanceName)
 	}
-	resourceAttributes.PutStr("db.system.name", "oracle.db")
+	resourceAttributes.PutStr("host.name", s.hostName)
 
 	scopedLog := topNResourceLog.ScopeLogs().AppendEmpty()
 	scopedLog.Scope().SetName(metadata.ScopeName)
@@ -872,6 +827,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 		record.Attributes().PutStr("db.query.text", hit.queryText)
 		record.Attributes().PutStr("oracledb.query.sql_id", hit.sqlId)
 		record.Attributes().PutStr("oracledb.query.child_number", hit.childNumber)
+		record.Attributes().PutStr("db.system.name", "oracle")
 	}
 
 	hitCount := len(hits)
@@ -912,7 +868,7 @@ func (s *oracleScraper) getChildAddressToPlanMap(ctx context.Context, hits []que
 	}
 
 	placeholdersCombined := strings.Join(placeholders, ", ")
-	sqlQuery := fmt.Sprintf(oracleQueryPlanData, placeholdersCombined)
+	sqlQuery := fmt.Sprintf(oracleQueryPlanDataSql, placeholdersCombined)
 
 	s.logger.Info("Fetching execution plans")
 	s.oraclePlanDataClient = s.clientProviderFunc(s.db, sqlQuery, s.logger)

@@ -97,11 +97,21 @@ func createLogsReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clie
 		logsConsumer consumer.Logs,
 	) (receiver.Logs, error) {
 		sqlCfg := cfg.(*Config)
+
+		if !sqlCfg.TopQueryCollection.Enabled && !sqlCfg.QuerySample.Enabled {
+			settings.TelemetrySettings.Logger.Debug("TopQueryCollection and QuerySample are not enabled for Oracle receiver.Skipping Log scrapper")
+			return nil, nil
+		}
 		metricsBuilder := metadata.NewMetricsBuilder(sqlCfg.MetricsBuilderConfig, settings)
 
 		instanceName, err := getInstanceName(getDataSource(*sqlCfg))
 		if err != nil {
 			return nil, err
+		}
+
+		hostName, hostNameErr := getHostName(getDataSource(*sqlCfg))
+		if hostNameErr != nil {
+			return nil, hostNameErr
 		}
 
 		cacheSize := sqlCfg.QueryCacheSize
@@ -113,7 +123,7 @@ func createLogsReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clie
 
 		mp, err := newLogsScraper(metricsBuilder, sqlCfg.MetricsBuilderConfig, sqlCfg.ControllerConfig, settings.TelemetrySettings.Logger, func() (*sql.DB, error) {
 			return sqlOpenerFunc(getDataSource(*sqlCfg))
-		}, clientProviderFunc, instanceName, metricCache, sqlCfg.TopQueryCollection, sqlCfg.QuerySample)
+		}, clientProviderFunc, instanceName, metricCache, sqlCfg.TopQueryCollection, sqlCfg.QuerySample, hostName)
 		if err != nil {
 			return nil, err
 		}
@@ -154,4 +164,12 @@ func getInstanceName(datasource string) (string, error) {
 
 	instanceName := datasourceURL.Host + datasourceURL.Path
 	return instanceName, nil
+}
+
+func getHostName(datasource string) (string, error) {
+	datasourceURL, err := url.Parse(datasource)
+	if err != nil {
+		return "", err
+	}
+	return datasourceURL.Host, nil
 }
