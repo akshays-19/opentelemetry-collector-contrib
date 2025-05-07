@@ -355,15 +355,15 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 				require.EqualError(t, err, test.errWanted)
 			} else {
 				require.NoError(t, err)
+				assert.Equal(t, 2, logs.ResourceLogs().At(0).Resource().Attributes().Len())
+				_, ok := logs.ResourceLogs().At(0).Resource().Attributes().Get("host.name")
+				assert.True(t, ok)
 				assert.Equal(t, 1, logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().Len(), "Query metrics has not been added to LogRecords")
-				assert.Equal(t, 20, logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Len(), "Metric data missing in LogRecord")
+				assert.Equal(t, 21, logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Len(), "Metric data missing in LogRecord")
 				elapsedTimeValue, _ := logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("oracledb.query.elapsed_time")
 				assert.Equal(t, 61, int(elapsedTimeValue.Double()), "Metric value calculation error")
 				executionsValue, _ := logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("oracledb.query.executions")
 				assert.Equal(t, 100000, int(executionsValue.Int()), "Metric value calculation error")
-
-				systemName, _ := logs.ResourceLogs().At(0).Resource().Attributes().Get("db.system.name")
-				assert.Equal(t, systemName.AsString(), "oracle.db", "db.system.name not set correctly")
 
 				queryText, _ := logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("db.query.text")
 				assert.False(t, strings.Contains(queryText.AsString(), "BusId1234"), "Obfuscation failure")
