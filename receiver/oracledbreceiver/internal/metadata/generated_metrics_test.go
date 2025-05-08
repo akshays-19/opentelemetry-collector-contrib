@@ -57,7 +57,7 @@ func TestMetricsBuilder(t *testing.T) {
 			start := pcommon.Timestamp(1_000_000_000)
 			ts := pcommon.Timestamp(1_000_001_000)
 			observedZapCore, observedLogs := observer.New(zap.WarnLevel)
-			settings := receivertest.NewNopSettings()
+			settings := receivertest.NewNopSettings(receivertest.NopType)
 			settings.Logger = zap.New(observedZapCore)
 			mb := NewMetricsBuilder(loadMetricsBuilderConfig(t, tt.name), settings, WithStartTime(start))
 
@@ -712,10 +712,10 @@ func TestMetricsBuilder(t *testing.T) {
 					assert.Equal(t, int64(1), dp.IntValue())
 					attrVal, ok := dp.Attributes().Get("session_type")
 					assert.True(t, ok)
-					assert.EqualValues(t, "session_type-val", attrVal.Str())
+					assert.Equal(t, "session_type-val", attrVal.Str())
 					attrVal, ok = dp.Attributes().Get("session_status")
 					assert.True(t, ok)
-					assert.EqualValues(t, "session_status-val", attrVal.Str())
+					assert.Equal(t, "session_status-val", attrVal.Str())
 				case "oracledb.tablespace_size.limit":
 					assert.False(t, validatedMetrics["oracledb.tablespace_size.limit"], "Found a duplicate in the metrics slice: oracledb.tablespace_size.limit")
 					validatedMetrics["oracledb.tablespace_size.limit"] = true
@@ -730,7 +730,7 @@ func TestMetricsBuilder(t *testing.T) {
 					assert.Equal(t, int64(1), dp.IntValue())
 					attrVal, ok := dp.Attributes().Get("tablespace_name")
 					assert.True(t, ok)
-					assert.EqualValues(t, "tablespace_name-val", attrVal.Str())
+					assert.Equal(t, "tablespace_name-val", attrVal.Str())
 				case "oracledb.tablespace_size.usage":
 					assert.False(t, validatedMetrics["oracledb.tablespace_size.usage"], "Found a duplicate in the metrics slice: oracledb.tablespace_size.usage")
 					validatedMetrics["oracledb.tablespace_size.usage"] = true
@@ -745,7 +745,7 @@ func TestMetricsBuilder(t *testing.T) {
 					assert.Equal(t, int64(1), dp.IntValue())
 					attrVal, ok := dp.Attributes().Get("tablespace_name")
 					assert.True(t, ok)
-					assert.EqualValues(t, "tablespace_name-val", attrVal.Str())
+					assert.Equal(t, "tablespace_name-val", attrVal.Str())
 				case "oracledb.transactions.limit":
 					assert.False(t, validatedMetrics["oracledb.transactions.limit"], "Found a duplicate in the metrics slice: oracledb.transactions.limit")
 					validatedMetrics["oracledb.transactions.limit"] = true
