@@ -170,11 +170,10 @@ func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig me
 	return scraper.NewMetrics(s.scrape, scraper.WithShutdown(s.shutdown), scraper.WithStart(s.start))
 }
 
-func newLogsScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig,
+func newLogsScraper(metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig,
 	logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string, metricCache *lru.Cache[string, map[string]int64],
 	topQueryCollectCfg TopQueryCollection, querySampleCfg QuerySample, hostName string) (scraper.Logs, error) {
 	s := &oracleScraper{
-		mb:                   metricsBuilder,
 		metricsBuilderConfig: metricsBuilderConfig,
 		scrapeCfg:            scrapeCfg,
 		logger:               logger,
@@ -664,13 +663,13 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+osUser), row[osUser])
 
-		i, err := strconv.ParseInt(row[duration], 10, 64)
+		i, err := strconv.ParseFloat(row[duration], 64)
 
 		if err != nil {
 			scrapeErrors = append(scrapeErrors, fmt.Errorf("failed to parse int64 for Duration, value was %s: %w", row[duration], err))
 
 		}
-		record.Attributes().PutInt(dbPrefix+queryPrefix+"duration", i)
+		record.Attributes().PutDouble(dbPrefix+queryPrefix+"duration", i)
 
 	}
 
