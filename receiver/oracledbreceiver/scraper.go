@@ -64,13 +64,14 @@ const (
 		select um.TABLESPACE_NAME, um.USED_SPACE, um.TABLESPACE_SIZE, ts.BLOCK_SIZE
 		FROM DBA_TABLESPACE_USAGE_METRICS um INNER JOIN DBA_TABLESPACES ts
 		ON um.TABLESPACE_NAME = ts.TABLESPACE_NAME`
-	dbPrefix = "oracledb."
 
 	dbTimeReferenceFormat = "2006-01-02 15:04:05"
 	sqlIDAttr             = "SQL_ID"
 	childAddressAttr      = "CHILD_ADDRESS"
 	childNumberAttr       = "CHILD_NUMBER"
 	sqlTextAttr           = "SQL_FULLTEXT"
+	dbPrefix              = "oracledb."
+	queryPrefix           = "query."
 
 	queryExecutionMetric        = "EXECUTIONS"
 	elapsedTimeMetric           = "ELAPSED_TIME"
@@ -109,22 +110,22 @@ var (
 	}
 
 	columnToMetricsMap = map[string]string{
-		queryExecutionMetric:        "oracledb.query.executions",
-		elapsedTimeMetric:           "oracledb.query.elapsed_time",
-		cpuTimeMetric:               "oracledb.query.cpu_time",
-		applicationWaitTimeMetric:   "oracledb.query.application_wait_time",
-		concurrencyWaitTimeMetric:   "oracledb.query.concurrency_wait_time",
-		userIoWaitTimeMetric:        "oracledb.query.user_io_wait_time",
-		clusterWaitTimeMetric:       "oracledb.query.cluster_wait_time",
-		rowsProcessedMetric:         "oracledb.query.rows_processed",
-		bufferGetsMetric:            "oracledb.query.buffer_gets",
-		physicalReadRequestsMetric:  "oracledb.query.physical_read_requests",
-		physicalWriteRequestsMetric: "oracledb.query.physical_write_requests",
-		physicalReadBytesMetric:     "oracledb.query.physical_read_bytes",
-		physicalWriteBytesMetric:    "oracledb.query.physical_write_bytes",
-		queryDirectReadsMetric:      "oracledb.query.direct_reads",
-		queryDirectWritesMetric:     "oracledb.query.direct_writes",
-		queryDiskReadsMetric:        "oracledb.query.disk_reads",
+		queryExecutionMetric:        dbPrefix + queryPrefix + "executions",
+		elapsedTimeMetric:           dbPrefix + queryPrefix + "elapsed_time",
+		cpuTimeMetric:               dbPrefix + queryPrefix + "cpu_time",
+		applicationWaitTimeMetric:   dbPrefix + queryPrefix + "application_wait_time",
+		concurrencyWaitTimeMetric:   dbPrefix + queryPrefix + "concurrency_wait_time",
+		userIoWaitTimeMetric:        dbPrefix + queryPrefix + "user_io_wait_time",
+		clusterWaitTimeMetric:       dbPrefix + queryPrefix + "cluster_wait_time",
+		rowsProcessedMetric:         dbPrefix + queryPrefix + "rows_processed",
+		bufferGetsMetric:            dbPrefix + queryPrefix + "buffer_gets",
+		physicalReadRequestsMetric:  dbPrefix + queryPrefix + "physical_read_requests",
+		physicalWriteRequestsMetric: dbPrefix + queryPrefix + "physical_write_requests",
+		physicalReadBytesMetric:     dbPrefix + queryPrefix + "physical_read_bytes",
+		physicalWriteBytesMetric:    dbPrefix + queryPrefix + "physical_write_bytes",
+		queryDirectReadsMetric:      dbPrefix + queryPrefix + "direct_reads",
+		queryDirectWritesMetric:     dbPrefix + queryPrefix + "direct_writes",
+		queryDiskReadsMetric:        dbPrefix + queryPrefix + "disk_reads",
 	}
 )
 
@@ -558,7 +559,6 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 }
 
 func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs) error {
-	const queryPrefix = "query."
 	const duration = "DURATION_SEC"
 	const event = "EVENT"
 	const hostName = "MACHINE"
@@ -822,10 +822,10 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 		}
 		planString := string(planBytes)
 		// if there is no execution plan, we send an empty string
-		record.Attributes().PutStr("oracledb.query_plan", planString)
-		record.Attributes().PutStr("db.query.text", hit.queryText)
-		record.Attributes().PutStr("oracledb.query.sql_id", hit.sqlId)
-		record.Attributes().PutStr("oracledb.query.child_number", hit.childNumber)
+		record.Attributes().PutStr(dbPrefix+"query_plan", planString)
+		record.Attributes().PutStr("db."+queryPrefix+"text", hit.queryText)
+		record.Attributes().PutStr(dbPrefix+queryPrefix+"sql_id", hit.sqlId)
+		record.Attributes().PutStr(dbPrefix+queryPrefix+"child_number", hit.childNumber)
 		record.Attributes().PutStr("db.system.name", "oracle")
 	}
 
