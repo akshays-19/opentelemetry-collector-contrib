@@ -6,11 +6,12 @@ package oracledbreceiver // import "github.com/open-telemetry/opentelemetry-coll
 import (
 	"context"
 	"database/sql"
-	"go.uber.org/zap"
 	"net"
 	"net/url"
 	"strconv"
 	"time"
+
+	"go.uber.org/zap"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 	go_ora "github.com/sijms/go-ora/v2"

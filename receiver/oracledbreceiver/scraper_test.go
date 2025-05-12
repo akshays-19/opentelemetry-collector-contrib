@@ -196,9 +196,11 @@ func TestScraper_Scrape(t *testing.T) {
 }
 
 var samplesQueryResponses = map[string][]metricRow{
-	samplesQuery: {{"S.MACHINE": "TEST-MACHINE", "S.USERNAME": "ADMIN", "S.SCHEMANAME": "ADMIN", "S.SQL_ID": "48bc50b6fuz4y",
+	samplesQuery: {{
+		"S.MACHINE": "TEST-MACHINE", "S.USERNAME": "ADMIN", "S.SCHEMANAME": "ADMIN", "S.SQL_ID": "48bc50b6fuz4y",
 		"S.SQL_CHILD_NUMBER": "0", "S.SID": "675", "S.SERIAL#": "51295", "Q.SQL_FULLTEXT": "test_query", "S.OSUSER": "test-user", "S.PROCESS": "1115",
-		"S.PORT": "54440", "S.PROGRAM": "Oracle SQL Developer for VS Code", "S.MODULE": "Oracle SQL Developer for VS Code", "S.STATUS": "ACTIVE", "S.STATE": "WAITED KNOWN TIME", "Q.PLAN_HASH_VALUE": "4199919568", "DURATION_SEC": "1"}},
+		"S.PORT": "54440", "S.PROGRAM": "Oracle SQL Developer for VS Code", "S.MODULE": "Oracle SQL Developer for VS Code", "S.STATUS": "ACTIVE", "S.STATE": "WAITED KNOWN TIME", "Q.PLAN_HASH_VALUE": "4199919568", "DURATION_SEC": "1",
+	}},
 }
 
 func TestSamplesQuery(t *testing.T) {
@@ -236,7 +238,6 @@ func TestSamplesQuery(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			scrpr := oracleScraper{
 				logger: zap.NewNop(),
 				dbProviderFunc: func() (*sql.DB, error) {
@@ -380,10 +381,8 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 					logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Timestamp().AsTime().UnixNano()),
 					string(logBytes))
 			}
-
 		})
 	}
-
 }
 
 func readFile(fname string) []byte {
