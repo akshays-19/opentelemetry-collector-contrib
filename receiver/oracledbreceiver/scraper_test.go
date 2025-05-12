@@ -231,7 +231,7 @@ func TestSamplesQuery(t *testing.T) {
 					samplesQueryResponses[s],
 				}}
 			},
-			errWanted: `failed to parse int64 for Duration, value was : strconv.ParseInt: parsing "": invalid syntax`,
+			errWanted: `failed to parse int64 for Duration, value was : strconv.ParseFloat: parsing "": invalid syntax`,
 		},
 	}
 	for _, test := range tests {
@@ -254,7 +254,6 @@ func TestSamplesQuery(t *testing.T) {
 			m, err := scrpr.scrapeLogs(context.Background())
 
 			if test.errWanted != "" {
-				//require.True(t, scrapererror.IsPartialScrapeError(err))
 				require.EqualError(t, err, test.errWanted)
 			} else {
 				require.NoError(t, err)
@@ -280,22 +279,27 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 			dbclientFn: func(_ *sql.DB, s string, _ *zap.Logger) dbClient {
 				if strings.Contains(s, "V$SQL_PLAN") {
 					metricRowFile := readFile("oracleQueryPlanData.txt")
-					json.Unmarshal(metricRowFile, &logRowData)
-					return &fakeDbClient{
-						Responses: [][]metricRow{
-							logRowData,
-						},
+					unmarshalErr := json.Unmarshal(metricRowFile, &logRowData)
+					if unmarshalErr == nil {
+						return &fakeDbClient{
+							Responses: [][]metricRow{
+								logRowData,
+							},
+						}
 					}
 
 				} else {
 					metricRowFile := readFile("oracleQueryMetricsData.txt")
-					json.Unmarshal(metricRowFile, &metricRowData)
-					return &fakeDbClient{
-						Responses: [][]metricRow{
-							metricRowData,
-						},
+					unmarshalErr := json.Unmarshal(metricRowFile, &metricRowData)
+					if unmarshalErr == nil {
+						return &fakeDbClient{
+							Responses: [][]metricRow{
+								metricRowData,
+							},
+						}
 					}
 				}
+				return nil
 			},
 		}, {
 			name: "No metrics collected",
@@ -348,8 +352,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 			}()
 			require.NoError(t, err)
 
-			logs := plog.NewLogs()
-			logs, err = scrpr.scrapeLogs(context.Background())
+			logs, err := scrpr.scrapeLogs(context.Background())
 
 			if test.errWanted != "" {
 				require.EqualError(t, err, test.errWanted)
