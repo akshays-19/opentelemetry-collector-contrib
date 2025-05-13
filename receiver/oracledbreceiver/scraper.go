@@ -696,8 +696,8 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	}
 
 	enabledColumns := s.getEnabledMetricColumns()
-	s.logger.Info("Enabled metric columns", zap.Strings("names", enabledColumns))
-	s.logger.Info("Cache", zap.Int("size", s.metricCache.Len()))
+	s.logger.Debug("Enabled metric columns", zap.Strings("names", enabledColumns))
+	s.logger.Debug("Cache", zap.Int("size", s.metricCache.Len()))
 	var hits []queryMetricCacheHit
 	var cacheUpdates, discardedHits int
 	for _, row := range metricRows {
@@ -753,7 +753,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	}
 
 	// if cache updates is not equal to rows returned, that indicates there is problem somewhere
-	s.logger.Info("Cache update", zap.Int("update-count", cacheUpdates), zap.Int("new-size", s.metricCache.Len()))
+	s.logger.Debug("Cache update", zap.Int("update-count", cacheUpdates), zap.Int("new-size", s.metricCache.Len()))
 
 	if len(hits) == 0 {
 		s.logger.Info("No log records for this scrape")
@@ -779,7 +779,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	maxHitsSize := min(len(hits), int(s.topQueryCollectCfg.TopQueryCount))
 	hits = hits[:maxHitsSize]
 	skippedCacheHits := hitCountBefore - len(hits)
-	s.logger.Info("Skipped cache hits", zap.Int("count", skippedCacheHits))
+	s.logger.Debug("Skipped cache hits", zap.Int("count", skippedCacheHits))
 
 	for _, hit := range hits {
 		s.logger.Debug(fmt.Sprintf("Final cache hit, SQL_ID: %v, CHILD_NUMBER: %v", hit.sqlId, hit.childNumber), zap.String("child-address", hit.childAddress), zap.Any("metrics", hit.metrics))
@@ -831,7 +831,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 
 	hitCount := len(hits)
 	if hitCount > 0 {
-		s.logger.Info("Log records for this scrape", zap.Int("count", hitCount))
+		s.logger.Debug("Log records for this scrape", zap.Int("count", hitCount))
 	}
 
 	return errors.Join(errs...)
@@ -869,7 +869,7 @@ func (s *oracleScraper) getChildAddressToPlanMap(ctx context.Context, hits []que
 	placeholdersCombined := strings.Join(placeholders, ", ")
 	sqlQuery := fmt.Sprintf(oracleQueryPlanDataSql, placeholdersCombined)
 
-	s.logger.Info("Fetching execution plans")
+	s.logger.Debug("Fetching execution plans")
 	s.oraclePlanDataClient = s.clientProviderFunc(s.db, sqlQuery, s.logger)
 	planData, _ := s.oraclePlanDataClient.metricRows(ctx, childAddressSlice...)
 
