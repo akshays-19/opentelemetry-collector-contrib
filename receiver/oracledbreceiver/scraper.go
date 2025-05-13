@@ -602,10 +602,19 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 
 	for _, row := range rows {
 
+		obfuscatedSQL, err := ObfuscateSQL(row[sqlText])
+
+		if err != nil {
+			s.logger.Error(fmt.Sprintf("oracleScraper failed getting metric row: %s", err))
+			continue
+		}
+
 		queryPlanHashVal := hex.EncodeToString([]byte(row[planHashValue]))
 		record := scopedLog.LogRecords().AppendEmpty()
 		record.SetEventName("db.server.query_sample")
 		record.SetTimestamp(pcommon.NewTimestampFromTime(time.Now()))
+
+		record.Attributes().PutStr(strings.ToLower("db.query.text"), obfuscatedSQL)
 
 		record.Attributes().PutStr("db.system.name", "oracle")
 		// reporting human-readable query  hash plan
@@ -652,14 +661,6 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+objectName), row[objectName])
 
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+objectType), row[objectType])
-
-		obfuscatedSQL, err := ObfuscateSQL(row[sqlText])
-
-		if err != nil {
-			s.logger.Error(fmt.Sprintf("oracleScraper failed getting metric row: %s", err))
-		} else {
-			record.Attributes().PutStr(strings.ToLower("db.query.text"), obfuscatedSQL)
-		}
 
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+osUser), row[osUser])
 
