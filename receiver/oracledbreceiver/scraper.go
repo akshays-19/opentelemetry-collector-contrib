@@ -173,7 +173,8 @@ func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig me
 
 func newLogsScraper(metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig,
 	logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string, metricCache *lru.Cache[string, map[string]int64],
-	topQueryCollectCfg TopQueryCollection, querySampleCfg QuerySample, hostName string) (scraper.Logs, error) {
+	topQueryCollectCfg TopQueryCollection, querySampleCfg QuerySample, hostName string,
+) (scraper.Logs, error) {
 	s := &oracleScraper{
 		metricsBuilderConfig: metricsBuilderConfig,
 		scrapeCfg:            scrapeCfg,
@@ -599,7 +600,6 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 
 	for _, row := range rows {
 		obfuscatedSQL, err := ObfuscateSQL(row[sqlText])
-
 		if err != nil {
 			s.logger.Error(fmt.Sprintf("oracleScraper failed getting metric row: %s", err))
 			continue
@@ -661,7 +661,6 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 		record.Attributes().PutStr(strings.ToLower(dbPrefix+queryPrefix+osUser), row[osUser])
 
 		i, err := strconv.ParseFloat(row[duration], 64)
-
 		if err != nil {
 			scrapeErrors = append(scrapeErrors, fmt.Errorf("failed to parse int64 for Duration, value was %s: %w", row[duration], err))
 		}
@@ -884,10 +883,12 @@ func (s *oracleScraper) getChildAddressToPlanMap(ctx context.Context, hits []que
 
 func (s *oracleScraper) getEnabledMetricColumns() []string {
 	// This function will later be extended to read enabled metrics from configuration once mdatagen can support it.
-	enabledColumns := []string{elapsedTimeMetric, queryExecutionMetric, cpuTimeMetric, applicationWaitTimeMetric,
+	enabledColumns := []string{
+		elapsedTimeMetric, queryExecutionMetric, cpuTimeMetric, applicationWaitTimeMetric,
 		concurrencyWaitTimeMetric, userIoWaitTimeMetric, clusterWaitTimeMetric, rowsProcessedMetric, bufferGetsMetric,
 		physicalReadRequestsMetric, physicalWriteRequestsMetric, physicalReadBytesMetric, physicalWriteBytesMetric,
-		queryDirectReadsMetric, queryDirectWritesMetric, queryDiskReadsMetric}
+		queryDirectReadsMetric, queryDirectWritesMetric, queryDiskReadsMetric,
+	}
 	return enabledColumns
 }
 
