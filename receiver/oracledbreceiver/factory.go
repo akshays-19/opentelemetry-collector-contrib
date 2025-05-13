@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.uber.org/zap"
-
 	lru "github.com/hashicorp/golang-lru/v2"
 	go_ora "github.com/sijms/go-ora/v2"
 	"go.opentelemetry.io/collector/component"
@@ -20,6 +18,7 @@ import (
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/scraper"
 	"go.opentelemetry.io/collector/scraper/scraperhelper"
+	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/oracledbreceiver/internal/metadata"
 )
@@ -100,7 +99,7 @@ func createLogsReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clie
 		sqlCfg := cfg.(*Config)
 
 		if !sqlCfg.TopQueryCollection.Enabled && !sqlCfg.QuerySample.Enabled {
-			settings.TelemetrySettings.Logger.Debug("TopQueryCollection and QuerySample are not enabled for Oracle receiver.Skipping Log scrapper")
+			settings.Logger.Debug("TopQueryCollection and QuerySample are not enabled for Oracle receiver.Skipping Log scrapper")
 			return nil, nil
 		}
 
@@ -117,11 +116,11 @@ func createLogsReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clie
 		cacheSize := sqlCfg.QueryCacheSize
 		metricCache, err := lru.New[string, map[string]int64](cacheSize)
 		if err != nil {
-			settings.TelemetrySettings.Logger.Error("Failed to create LRU cache, skipping the current scraper", zap.Error(err))
+			settings.Logger.Error("Failed to create LRU cache, skipping the current scraper", zap.Error(err))
 			return nil, err
 		}
 
-		mp, err := newLogsScraper(sqlCfg.MetricsBuilderConfig, sqlCfg.ControllerConfig, settings.TelemetrySettings.Logger, func() (*sql.DB, error) {
+		mp, err := newLogsScraper(sqlCfg.MetricsBuilderConfig, sqlCfg.ControllerConfig, settings.Logger, func() (*sql.DB, error) {
 			return sqlOpenerFunc(getDataSource(*sqlCfg))
 		}, clientProviderFunc, instanceName, metricCache, sqlCfg.TopQueryCollection, sqlCfg.QuerySample, hostName)
 		if err != nil {

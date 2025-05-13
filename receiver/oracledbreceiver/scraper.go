@@ -17,7 +17,6 @@ import (
 	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/oracledbreceiver/internal/metadata"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
@@ -27,6 +26,8 @@ import (
 	"go.opentelemetry.io/collector/scraper/scraperhelper"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/oracledbreceiver/internal/metadata"
 )
 
 const (
@@ -96,9 +97,9 @@ var (
 	//go:embed templates/oracleQuerySampleSql.tmpl
 	samplesQuery string
 	//go:embed templates/oracleQueryMetricsAndTextSql.tmpl
-	oracleQueryMetricsSql string
+	oracleQueryMetricsSQL string
 	//go:embed templates/oracleQueryPlanSql.tmpl
-	oracleQueryPlanDataSql string
+	oracleQueryPlanDataSQL string
 
 	microSecColumnNames = map[string]bool{
 		elapsedTimeMetric:         true,
@@ -140,7 +141,6 @@ type oracleScraper struct {
 	sessionCountClient         dbClient
 	samplesQueryClient         dbClient
 	oracleQueryMetricsClient   dbClient
-	oracleQueryTextClient      dbClient
 	oraclePlanDataClient       dbClient
 	db                         *sql.DB
 	clientProviderFunc         clientProviderFunc
@@ -187,7 +187,6 @@ func newLogsScraper(metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCf
 		hostName:             hostName,
 	}
 	return scraper.NewLogs(s.scrapeLogs, scraper.WithShutdown(s.shutdown), scraper.WithStart(s.start))
-
 }
 
 func (s *oracleScraper) start(context.Context, component.Host) error {
@@ -529,7 +528,7 @@ func (s *oracleScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 }
 
 type queryMetricCacheHit struct {
-	sqlId        string
+	sqlID        string
 	childNumber  string
 	childAddress string
 	queryText    string
@@ -537,7 +536,6 @@ type queryMetricCacheHit struct {
 }
 
 func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
-
 	logs := plog.NewLogs()
 	var scrapeErrors []error
 
@@ -567,7 +565,6 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 	const objectName = "OBJECT_NAME"
 	const objectType = "OBJECT_TYPE"
 	const process = "PROCESS"
-	const port = "PORT"
 	const program = "PROGRAM"
 	const planHashValue = "PLAN_HASH_VALUE"
 	const sqlID = "SQL_ID"
@@ -601,7 +598,6 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 	scopedLog.Scope().SetVersion("0.0.1")
 
 	for _, row := range rows {
-
 		obfuscatedSQL, err := ObfuscateSQL(row[sqlText])
 
 		if err != nil {
@@ -668,10 +664,8 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 
 		if err != nil {
 			scrapeErrors = append(scrapeErrors, fmt.Errorf("failed to parse int64 for Duration, value was %s: %w", row[duration], err))
-
 		}
 		record.Attributes().PutDouble(dbPrefix+queryPrefix+"duration", i)
-
 	}
 
 	return errors.Join(scrapeErrors...)
@@ -682,16 +676,16 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	// get metrics and query texts from DB
 	timestamp := pcommon.NewTimestampFromTime(time.Now())
 	intervalSeconds := int(s.scrapeCfg.CollectionInterval.Seconds())
-	s.oracleQueryMetricsClient = s.clientProviderFunc(s.db, oracleQueryMetricsSql, s.logger)
+	s.oracleQueryMetricsClient = s.clientProviderFunc(s.db, oracleQueryMetricsSQL, s.logger)
 	now := timestamp.AsTime().Format(dbTimeReferenceFormat)
 	metricRows, metricError := s.oracleQueryMetricsClient.metricRows(ctx, now, intervalSeconds, s.topQueryCollectCfg.MaxQuerySampleCount)
 
 	if metricError != nil {
-		errs = append(errs, fmt.Errorf("error executing %s: %w", oracleQueryMetricsSql, metricError))
+		errs = append(errs, fmt.Errorf("error executing %s: %w", oracleQueryMetricsSQL, metricError))
 		return errors.Join(errs...)
 	}
 
-	if metricRows == nil || len(metricRows) == 0 {
+	if len(metricRows) == 0 {
 		errs = append(errs, errors.New("no data returned from oracleQueryMetricsClient"))
 		return errors.Join(errs...)
 	}
@@ -717,9 +711,8 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 		// if we have a cache hit and the query doesn't belong to top N, cache is updated anyway
 		// as a result, once it finally makes its way to the top N queries, only the latest delta will be sent downstream
 		if oldCacheVal, ok := s.metricCache.Get(cacheKey); ok {
-
 			hit := queryMetricCacheHit{
-				sqlId:        row[sqlIDAttr],
+				sqlID:        row[sqlIDAttr],
 				queryText:    row[sqlTextAttr],
 				childNumber:  row[childNumberAttr],
 				childAddress: row[childAddressAttr],
@@ -763,7 +756,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 
 	s.logger.Info("Cache hits", zap.Int("hit-count", len(hits)), zap.Int("discarded-hit-count", discardedHits))
 	for _, hit := range hits {
-		s.logger.Debug(fmt.Sprintf("Cache hit, SQL_ID: %v, CHILD_NUMBER: %v", hit.sqlId, hit.childNumber), zap.Int64("elapsed-time", hit.metrics[elapsedTimeMetric]))
+		s.logger.Debug(fmt.Sprintf("Cache hit, SQL_ID: %v, CHILD_NUMBER: %v", hit.sqlID, hit.childNumber), zap.Int64("elapsed-time", hit.metrics[elapsedTimeMetric]))
 	}
 
 	// order by elapsed time delta, descending
@@ -772,7 +765,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	})
 
 	for _, hit := range hits {
-		s.logger.Debug(fmt.Sprintf("Cache hit after sorting, SQL_ID: %v, CHILD_NUMBER: %v", hit.sqlId, hit.childNumber), zap.String("child-address", hit.childAddress), zap.Int64("elapsed-time", hit.metrics[elapsedTimeMetric]))
+		s.logger.Debug(fmt.Sprintf("Cache hit after sorting, SQL_ID: %v, CHILD_NUMBER: %v", hit.sqlID, hit.childNumber), zap.String("child-address", hit.childAddress), zap.Int64("elapsed-time", hit.metrics[elapsedTimeMetric]))
 	}
 
 	// keep at most maxHitSize
@@ -783,7 +776,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 	s.logger.Debug("Skipped cache hits", zap.Int("count", skippedCacheHits))
 
 	for _, hit := range hits {
-		s.logger.Debug(fmt.Sprintf("Final cache hit, SQL_ID: %v, CHILD_NUMBER: %v", hit.sqlId, hit.childNumber), zap.String("child-address", hit.childAddress), zap.Any("metrics", hit.metrics))
+		s.logger.Debug(fmt.Sprintf("Final cache hit, SQL_ID: %v, CHILD_NUMBER: %v", hit.sqlID, hit.childNumber), zap.String("child-address", hit.childAddress), zap.Any("metrics", hit.metrics))
 	}
 	hits = s.obfuscateCacheHits(hits)
 	childAddressToPlanMap := s.getChildAddressToPlanMap(ctx, hits)
@@ -819,13 +812,13 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context, logs plog.Log
 
 		planBytes, err := json.Marshal(childAddressToPlanMap[hit.childAddress])
 		if err != nil {
-			s.logger.Error("Error marshalling plan data to JSON", zap.Error(err))
+			s.logger.Error("Error marshaling plan data to JSON", zap.Error(err))
 		}
 		planString := string(planBytes)
 		// if there is no execution plan, we send an empty string
 		record.Attributes().PutStr(dbPrefix+"query_plan", planString)
 		record.Attributes().PutStr("db."+queryPrefix+"text", hit.queryText)
-		record.Attributes().PutStr(dbPrefix+queryPrefix+"sql_id", hit.sqlId)
+		record.Attributes().PutStr(dbPrefix+queryPrefix+"sql_id", hit.sqlID)
 		record.Attributes().PutStr(dbPrefix+queryPrefix+"child_number", hit.childNumber)
 		record.Attributes().PutStr("db.system.name", "oracle")
 	}
@@ -846,8 +839,8 @@ func (s *oracleScraper) obfuscateCacheHits(hits []queryMetricCacheHit) []queryMe
 		if err != nil {
 			s.logger.Error("oracleScraper failed getting metric rows", zap.Error(err))
 		} else {
-			obfuscatedSqlLowerCase := strings.ToLower(obfuscatedSQL)
-			hit.queryText = obfuscatedSqlLowerCase
+			obfuscatedSQLLowerCase := strings.ToLower(obfuscatedSQL)
+			hit.queryText = obfuscatedSQLLowerCase
 			obfuscatedHits = append(obfuscatedHits, hit)
 		}
 	}
@@ -868,7 +861,7 @@ func (s *oracleScraper) getChildAddressToPlanMap(ctx context.Context, hits []que
 	}
 
 	placeholdersCombined := strings.Join(placeholders, ", ")
-	sqlQuery := fmt.Sprintf(oracleQueryPlanDataSql, placeholdersCombined)
+	sqlQuery := fmt.Sprintf(oracleQueryPlanDataSQL, placeholdersCombined)
 
 	s.logger.Debug("Fetching execution plans")
 	s.oraclePlanDataClient = s.clientProviderFunc(s.db, sqlQuery, s.logger)
@@ -890,7 +883,7 @@ func (s *oracleScraper) getChildAddressToPlanMap(ctx context.Context, hits []que
 }
 
 func (s *oracleScraper) getEnabledMetricColumns() []string {
-	//This function will later be extended to read enabled metrics from configuration once mdatagen can support it.
+	// This function will later be extended to read enabled metrics from configuration once mdatagen can support it.
 	enabledColumns := []string{elapsedTimeMetric, queryExecutionMetric, cpuTimeMetric, applicationWaitTimeMetric,
 		concurrencyWaitTimeMetric, userIoWaitTimeMetric, clusterWaitTimeMetric, rowsProcessedMetric, bufferGetsMetric,
 		physicalReadRequestsMetric, physicalWriteRequestsMetric, physicalReadBytesMetric, physicalWriteBytesMetric,

@@ -226,7 +226,7 @@ func TestSamplesQuery(t *testing.T) {
 		},
 		{
 			name: "bad samples data",
-			dbclientFn: func(_ *sql.DB, s string, _ *zap.Logger) dbClient {
+			dbclientFn: func(_ *sql.DB, _ string, _ *zap.Logger) dbClient {
 				return &fakeDbClient{Responses: [][]metricRow{
 					samplesQueryResponses["invalidQuery"],
 				}}
@@ -286,7 +286,6 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 							},
 						}
 					}
-
 				} else {
 					metricRowFile := readFile("oracleQueryMetricsData.txt")
 					unmarshalErr := json.Unmarshal(metricRowFile, &metricRowData)
@@ -302,7 +301,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 			},
 		}, {
 			name: "No metrics collected",
-			dbclientFn: func(_ *sql.DB, s string, _ *zap.Logger) dbClient {
+			dbclientFn: func(_ *sql.DB, _ string, _ *zap.Logger) dbClient {
 				return &fakeDbClient{
 					Responses: [][]metricRow{
 						nil,
@@ -312,7 +311,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 			errWanted: `no data returned from oracleQueryMetricsClient`,
 		}, {
 			name: "Error on collecting metrics",
-			dbclientFn: func(_ *sql.DB, s string, _ *zap.Logger) dbClient {
+			dbclientFn: func(_ *sql.DB, _ string, _ *zap.Logger) dbClient {
 				return &fakeDbClient{
 					Responses: [][]metricRow{
 						nil,
@@ -320,7 +319,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 					Err: errors.New("Mock error"),
 				}
 			},
-			errWanted: fmt.Sprintf("error executing %s: %s", oracleQueryMetricsSql, "Mock error"),
+			errWanted: fmt.Sprintf("error executing %s: %s", oracleQueryMetricsSQL, "Mock error"),
 		},
 	}
 
@@ -368,7 +367,7 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 				assert.Equal(t, 100000, int(executionsValue.Int()), "Metric value calculation error")
 
 				queryText, _ := logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("db.query.text")
-				assert.False(t, strings.Contains(queryText.AsString(), "BusId1234"), "Obfuscation failure")
+				assert.NotContains(t, queryText.AsString(), "BusId1234", "Obfuscation failure")
 
 				planText, _ := logs.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Get("oracledb.query_plan")
 				assert.Equal(t, string(readFile("planJsonTextOutput.txt")), planText.AsString(), "Plan text not accurate")
