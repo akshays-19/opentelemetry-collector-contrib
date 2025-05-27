@@ -4,6 +4,7 @@ status:
   class: receiver
   stability:
     alpha: [metrics]
+    development: [logs]
   distributions: [contrib]
   codeowners:
     active: [dmitryax, crobert-1, atoulme]
@@ -11,6 +12,10 @@ status:
 resource_attributes:
   oracledb.instance.name:
     description: The name of the instance that data is coming from.
+    enabled: true
+    type: string
+  host.name:
+    description: The host name of Oracle Server
     enabled: true
     type: string
 
@@ -24,6 +29,98 @@ attributes:
   tablespace_name:
     description: Tablespace name
     type: string
+  # attributes for events
+  ## top query
+  db.query.text:
+    description: The text of the database query being executed.
+    type: string
+  oracledb.query_plan:
+    description: The query execution plan used by the SQL Server.
+    type: string
+  oracledb.query.sql_id:
+    description: The SQL ID of the query.
+    type: string
+  oracledb.query.child_number:
+    description: The child number of the query.
+    type: string
+  oracledb.query.application_wait_time:
+    description: Application wait time
+    type: double
+  oracledb.query.buffer_gets:
+    description: Number of buffer gets
+    type: int
+  oracledb.query.cluster_wait_time:
+    description: Cluster wait time
+    type: double
+  oracledb.query.concurrency_wait_time:
+    description: Concurrency wait time
+    type: double
+  oracledb.query.cpu_time:
+    description: CPU time
+    type: double
+  oracledb.query.direct_reads:
+    description: Number of direct reads
+    type: int
+  oracledb.query.direct_writes:
+    description: Number of direct writes
+    type: int
+  oracledb.query.disk_reads:
+    description: Number of disk reads
+    type: int
+  oracledb.query.elapsed_time:
+    description: Elapsed time
+    type: double
+  oracledb.query.executions:
+    description: Number of executions
+    type: int
+  oracledb.query.physical_read_bytes:
+    description: Number of physical bytes read
+    type: int
+  oracledb.query.physical_read_requests:
+    description: Number of physical read requests
+    type: int
+  oracledb.query.physical_write_bytes:
+    description: Number of bytes written
+    type: int
+  oracledb.query.physical_write_requests:
+    description: Number of physical write requests
+    type: int
+  oracledb.query.rows_processed:
+    description: Number of rows returned
+    type: int
+  oracledb.query.user_io_wait_time:
+    description: User IO wait time
+    type: double
+  db.server.name:
+    description: The name of the server hosting the database.
+    type: string
+
+events:
+  db.server.top_query:
+    enabled: true
+    description: top query
+    attributes:
+      - db.query.text
+      - oracledb.query_plan
+      - oracledb.query.sql_id
+      - oracledb.query.child_number
+      - oracledb.query.application_wait_time
+      - oracledb.query.buffer_gets
+      - oracledb.query.cluster_wait_time
+      - oracledb.query.concurrency_wait_time
+      - oracledb.query.cpu_time
+      - oracledb.query.direct_reads
+      - oracledb.query.direct_writes
+      - oracledb.query.disk_reads
+      - oracledb.query.elapsed_time
+      - oracledb.query.executions
+      - oracledb.query.physical_read_bytes
+      - oracledb.query.physical_read_requests
+      - oracledb.query.physical_write_bytes
+      - oracledb.query.physical_write_requests
+      - oracledb.query.rows_processed
+      - oracledb.query.user_io_wait_time
+      - db.server.name
 
 metrics:
   oracledb.cpu_time:

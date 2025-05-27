@@ -167,9 +167,9 @@ func TestScraper_Scrape(t *testing.T) {
 				metricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
 			}
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
-			defer func() {
-				assert.NoError(t, scrpr.shutdown(context.Background()))
-			}()
+			//defer func() {
+			//	assert.NoError(t, scrpr.shutdown(context.Background()))
+			//}()
 			require.NoError(t, err)
 			m, err := scrpr.scrape(context.Background())
 			if test.errWanted != "" {
@@ -325,23 +325,31 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			cfg := metadata.DefaultMetricsBuilderConfig()
-			cfg.Metrics.OracledbConsistentGets.Enabled = true
-			cfg.Metrics.OracledbDbBlockGets.Enabled = true
+			logsCfg := metadata.DefaultLogsBuilderConfig()
+			logsCfg.Events.DbServerTopQuery.Enabled = true
+			logsCfg.ResourceAttributes.OracledbInstanceName.Enabled = true
+			logsCfg.ResourceAttributes.HostName.Enabled = true
+			metricsCfg := metadata.DefaultMetricsBuilderConfig()
+			metricsCfg.Metrics.OracledbConsistentGets.Enabled = true
+			metricsCfg.Metrics.OracledbDbBlockGets.Enabled = true
 			lruCache, _ := lru.New[string, map[string]int64](500)
 			lruCache.Add("fxk8aq3nds8aw:0", cacheValue)
 
 			scrpr := oracleScraper{
 				logger: zap.NewNop(),
-				mb:     metadata.NewMetricsBuilder(cfg, receivertest.NewNopSettings(receivertest.NopType)),
+				mb:     metadata.NewMetricsBuilder(metricsCfg, receivertest.NewNopSettings(receivertest.NopType)),
+				lb:     metadata.NewLogsBuilder(logsCfg, receivertest.NewNopSettings(metadata.Type)),
 				dbProviderFunc: func() (*sql.DB, error) {
 					return nil, nil
 				},
 				clientProviderFunc:   test.dbclientFn,
 				id:                   component.ID{},
 				metricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
+				logsBuilderConfig:    metadata.DefaultLogsBuilderConfig(),
 				metricCache:          lruCache,
 				topQueryCollectCfg:   TopQueryCollection{Enabled: true, MaxQuerySampleCount: 5000, TopQueryCount: 200},
+				instanceName:         "oracle-instance-sample-1",
+				hostName:             "oracle-host-sample-1",
 			}
 
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())

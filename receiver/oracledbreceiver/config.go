@@ -48,6 +48,7 @@ type Config struct {
 	Username                       string `mapstructure:"username"`
 	scraperhelper.ControllerConfig `mapstructure:",squash"`
 	metadata.MetricsBuilderConfig  `mapstructure:",squash"`
+	metadata.LogsBuilderConfig     `mapstructure:",squash"`
 
 	TopQueryCollection `mapstructure:"top_query_collection"`
 	QuerySample        `mapstructure:"query_sample_collection"`
