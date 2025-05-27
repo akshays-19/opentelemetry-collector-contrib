@@ -101,34 +101,6 @@ var (
 	oracleQueryMetricsSQL string
 	//go:embed templates/oracleQueryPlanSql.tmpl
 	oracleQueryPlanDataSQL string
-
-	microSecColumnNames = map[string]bool{
-		elapsedTimeMetric:         true,
-		cpuTimeMetric:             true,
-		applicationWaitTimeMetric: true,
-		clusterWaitTimeMetric:     true,
-		concurrencyWaitTimeMetric: true,
-		userIoWaitTimeMetric:      true,
-	}
-
-	columnToMetricsMap = map[string]string{
-		queryExecutionMetric:        dbPrefix + queryPrefix + "executions",
-		elapsedTimeMetric:           dbPrefix + queryPrefix + "elapsed_time",
-		cpuTimeMetric:               dbPrefix + queryPrefix + "cpu_time",
-		applicationWaitTimeMetric:   dbPrefix + queryPrefix + "application_wait_time",
-		concurrencyWaitTimeMetric:   dbPrefix + queryPrefix + "concurrency_wait_time",
-		userIoWaitTimeMetric:        dbPrefix + queryPrefix + "user_io_wait_time",
-		clusterWaitTimeMetric:       dbPrefix + queryPrefix + "cluster_wait_time",
-		rowsProcessedMetric:         dbPrefix + queryPrefix + "rows_processed",
-		bufferGetsMetric:            dbPrefix + queryPrefix + "buffer_gets",
-		physicalReadRequestsMetric:  dbPrefix + queryPrefix + "physical_read_requests",
-		physicalWriteRequestsMetric: dbPrefix + queryPrefix + "physical_write_requests",
-		physicalReadBytesMetric:     dbPrefix + queryPrefix + "physical_read_bytes",
-		physicalWriteBytesMetric:    dbPrefix + queryPrefix + "physical_write_bytes",
-		queryDirectReadsMetric:      dbPrefix + queryPrefix + "direct_reads",
-		queryDirectWritesMetric:     dbPrefix + queryPrefix + "direct_writes",
-		queryDiskReadsMetric:        dbPrefix + queryPrefix + "disk_reads",
-	}
 )
 
 type dbProviderFunc func() (*sql.DB, error)
