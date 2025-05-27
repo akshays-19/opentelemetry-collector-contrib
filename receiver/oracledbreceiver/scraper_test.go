@@ -167,9 +167,9 @@ func TestScraper_Scrape(t *testing.T) {
 				metricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
 			}
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
-			//defer func() {
-			//	assert.NoError(t, scrpr.shutdown(context.Background()))
-			//}()
+			defer func() {
+				assert.NoError(t, scrpr.shutdown(context.Background()))
+			}()
 			require.NoError(t, err)
 			m, err := scrpr.scrape(context.Background())
 			if test.errWanted != "" {
