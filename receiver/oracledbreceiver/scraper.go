@@ -73,7 +73,7 @@ const (
 	sqlTextAttr           = "SQL_FULLTEXT"
 	dbPrefix              = "oracledb."
 	queryPrefix           = "query."
-	dbSystemNameVal
+	dbSystemNameVal       = "oracle"
 
 	queryExecutionMetric        = "EXECUTIONS"
 	elapsedTimeMetric           = "ELAPSED_TIME"
