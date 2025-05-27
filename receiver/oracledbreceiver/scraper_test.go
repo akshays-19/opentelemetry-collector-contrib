@@ -179,6 +179,9 @@ func TestScraper_Scrape(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, 18, m.ResourceMetrics().At(0).ScopeMetrics().At(0).Metrics().Len())
 			}
+			hostName, ok := m.ResourceMetrics().At(0).Resource().Attributes().Get("host.name")
+			assert.True(t, ok)
+			assert.Empty(t, hostName.Str())
 			name, ok := m.ResourceMetrics().At(0).Resource().Attributes().Get("oracledb.instance.name")
 			assert.True(t, ok)
 			assert.Empty(t, name.Str())

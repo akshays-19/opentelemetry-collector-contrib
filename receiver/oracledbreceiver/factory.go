@@ -72,10 +72,14 @@ func createReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clientPr
 		if err != nil {
 			return nil, err
 		}
+		hostName, hostNameErr := getHostName(getDataSource(*sqlCfg))
+		if hostNameErr != nil {
+			return nil, hostNameErr
+		}
 
 		mp, err := newScraper(metricsBuilder, sqlCfg.MetricsBuilderConfig, sqlCfg.ControllerConfig, settings.Logger, func() (*sql.DB, error) {
 			return sqlOpenerFunc(getDataSource(*sqlCfg))
-		}, clientProviderFunc, instanceName)
+		}, clientProviderFunc, instanceName, hostName)
 		if err != nil {
 			return nil, err
 		}
