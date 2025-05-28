@@ -43,6 +43,7 @@ func createDefaultConfig() component.Config {
 	return &Config{
 		ControllerConfig:     cfg,
 		MetricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
+		LogsBuilderConfig:    metadata.DefaultLogsBuilderConfig(),
 		TopQueryCollection: TopQueryCollection{
 			Enabled:             false,
 			MaxQuerySampleCount: 1000,
@@ -71,10 +72,14 @@ func createReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clientPr
 		if err != nil {
 			return nil, err
 		}
+		hostName, hostNameErr := getHostName(getDataSource(*sqlCfg))
+		if hostNameErr != nil {
+			return nil, hostNameErr
+		}
 
 		mp, err := newScraper(metricsBuilder, sqlCfg.MetricsBuilderConfig, sqlCfg.ControllerConfig, settings.Logger, func() (*sql.DB, error) {
 			return sqlOpenerFunc(getDataSource(*sqlCfg))
-		}, clientProviderFunc, instanceName)
+		}, clientProviderFunc, instanceName, hostName)
 		if err != nil {
 			return nil, err
 		}
@@ -98,10 +103,12 @@ func createLogsReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clie
 	) (receiver.Logs, error) {
 		sqlCfg := cfg.(*Config)
 
-		if !sqlCfg.TopQueryCollection.Enabled && !sqlCfg.QuerySample.Enabled {
+		if !sqlCfg.Events.DbServerTopQuery.Enabled && !sqlCfg.QuerySample.Enabled {
 			settings.Logger.Debug("TopQueryCollection and QuerySample are not enabled for Oracle receiver.Skipping Log scrapper")
 			return nil, nil
 		}
+
+		logsBuilder := metadata.NewLogsBuilder(sqlCfg.LogsBuilderConfig, settings)
 
 		instanceName, err := getInstanceName(getDataSource(*sqlCfg))
 		if err != nil {
@@ -120,7 +127,7 @@ func createLogsReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clie
 			return nil, err
 		}
 
-		mp, err := newLogsScraper(sqlCfg.MetricsBuilderConfig, sqlCfg.ControllerConfig, settings.Logger, func() (*sql.DB, error) {
+		mp, err := newLogsScraper(logsBuilder, sqlCfg.LogsBuilderConfig, sqlCfg.ControllerConfig, settings.Logger, func() (*sql.DB, error) {
 			return sqlOpenerFunc(getDataSource(*sqlCfg))
 		}, clientProviderFunc, instanceName, metricCache, sqlCfg.TopQueryCollection, sqlCfg.QuerySample, hostName)
 		if err != nil {
