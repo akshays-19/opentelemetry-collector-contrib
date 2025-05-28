@@ -142,7 +142,7 @@ func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig me
 		dbProviderFunc:       providerFunc,
 		clientProviderFunc:   clientProviderFunc,
 		instanceName:         instanceName,
-		hostName:           hostName,
+		hostName:             hostName,
 	}
 	return scraper.NewMetrics(s.scrape, scraper.WithShutdown(s.shutdown), scraper.WithStart(s.start))
 }
