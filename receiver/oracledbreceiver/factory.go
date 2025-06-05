@@ -50,7 +50,7 @@ func createDefaultConfig() component.Config {
 			TopQueryCount:       200,
 			QueryCacheSize:      5000,
 		},
-		querySample: NewQuerySample(true),
+		querySample: newQuerySample(true),
 	}
 }
 

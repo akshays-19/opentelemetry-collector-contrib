@@ -40,7 +40,7 @@ type querySample struct {
 	Enabled bool `mapstructure:"enabled"`
 }
 
-func NewQuerySample(enabled bool) querySample {
+func newQuerySample(enabled bool) querySample {
 	return querySample{Enabled: enabled}
 }
 
