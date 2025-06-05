@@ -771,7 +771,8 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context) (plog.Logs, e
 		}
 		planString := string(planBytes)
 
-		s.lb.RecordDbServerTopQueryEvent(timestamp,
+		s.lb.RecordDbServerTopQueryEvent(context.Background(),
+			timestamp,
 			hit.queryText,
 			planString, hit.sqlID, hit.childNumber,
 			asFloatInMicrosec(hit.metrics[applicationWaitTimeMetric]),
