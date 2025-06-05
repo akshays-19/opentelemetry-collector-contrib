@@ -3,16 +3,17 @@
 package metadata
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest/observer"
-
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/receiver/receivertest"
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 type eventsTestDataSet int
@@ -109,6 +110,13 @@ func TestLogsBuilder(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			timestamp := pcommon.Timestamp(1_000_001_000)
+			traceID := [16]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+			spanID := [8]byte{0, 1, 2, 3, 4, 5, 6, 7}
+			ctx := trace.ContextWithSpanContext(context.Background(), trace.NewSpanContext(trace.SpanContextConfig{
+				TraceID:    trace.TraceID(traceID),
+				SpanID:     trace.SpanID(spanID),
+				TraceFlags: trace.FlagsSampled,
+			}))
 			observedZapCore, observedLogs := observer.New(zap.WarnLevel)
 			settings := receivertest.NewNopSettings(receivertest.NopType)
 			settings.Logger = zap.New(observedZapCore)
@@ -122,7 +130,7 @@ func TestLogsBuilder(t *testing.T) {
 			allEventsCount := 0
 			defaultEventsCount++
 			allEventsCount++
-			lb.RecordDbServerTopQueryEvent(timestamp, "db.query.text-val", "oracledb.query_plan-val", "oracledb.query.sql_id-val", "oracledb.query.child_number-val", 36.100000, 26, 32.100000, 36.100000, 23.100000, 27, 28, 25, 27.100000, 25, 34, 37, 35, 38, 29, 32.100000, "db.server.name-val")
+			lb.RecordDbServerTopQueryEvent(ctx, timestamp, "db.query.text-val", "oracledb.query_plan-val", "oracledb.query.sql_id-val", "oracledb.query.child_number-val", 36.100000, 26, 32.100000, 36.100000, 23.100000, 27, 28, 25, 27.100000, 25, 34, 37, 35, 38, 29, 32.100000, "db.server.name-val")
 
 			rb := lb.NewResourceBuilder()
 			rb.SetHostName("host.name-val")
@@ -154,6 +162,8 @@ func TestLogsBuilder(t *testing.T) {
 					validatedEvents["db.server.top_query"] = true
 					lr := lrs.At(i)
 					assert.Equal(t, timestamp, lr.Timestamp())
+					assert.Equal(t, pcommon.TraceID(traceID), lr.TraceID())
+					assert.Equal(t, pcommon.SpanID(spanID), lr.SpanID())
 					attrVal, ok := lr.Attributes().Get("db.query.text")
 					assert.True(t, ok)
 					assert.Equal(t, "db.query.text-val", attrVal.Str())
