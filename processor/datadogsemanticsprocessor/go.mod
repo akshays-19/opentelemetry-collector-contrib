@@ -4,18 +4,18 @@ go 1.23.0
 
 require (
 	github.com/DataDog/datadog-agent/pkg/trace v0.65.1
-	github.com/DataDog/opentelemetry-mapping-go/pkg/otlp/attributes v0.27.0
+	github.com/DataDog/opentelemetry-mapping-go/pkg/otlp/attributes v0.27.1
 	github.com/stretchr/testify v1.10.0
-	go.opentelemetry.io/collector/component v1.31.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/component/componentstatus v0.125.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/component/componenttest v0.125.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/confmap v1.31.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/consumer v1.31.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/consumer/consumertest v0.125.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/pdata v1.31.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/processor v1.31.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/processor/processorhelper v0.125.1-0.20250509190408-4ca0f1829e0a
-	go.opentelemetry.io/collector/processor/processortest v0.125.1-0.20250509190408-4ca0f1829e0a
+	go.opentelemetry.io/collector/component v1.33.0
+	go.opentelemetry.io/collector/component/componentstatus v0.127.0
+	go.opentelemetry.io/collector/component/componenttest v0.127.0
+	go.opentelemetry.io/collector/confmap v1.33.0
+	go.opentelemetry.io/collector/consumer v1.33.0
+	go.opentelemetry.io/collector/consumer/consumertest v0.127.0
+	go.opentelemetry.io/collector/pdata v1.33.0
+	go.opentelemetry.io/collector/processor v1.33.0
+	go.opentelemetry.io/collector/processor/processorhelper v0.127.0
+	go.opentelemetry.io/collector/processor/processortest v0.127.0
 	go.opentelemetry.io/otel v1.35.0
 )
 
@@ -36,7 +36,7 @@ require (
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/ebitengine/purego v0.8.2 // indirect
+	github.com/ebitengine/purego v0.8.3 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
@@ -68,14 +68,14 @@ require (
 	github.com/tklauser/numcpus v0.8.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/collector/consumer/xconsumer v0.125.1-0.20250509190408-4ca0f1829e0a // indirect
-	go.opentelemetry.io/collector/featuregate v1.31.1-0.20250509190408-4ca0f1829e0a // indirect
-	go.opentelemetry.io/collector/internal/telemetry v0.125.1-0.20250509190408-4ca0f1829e0a // indirect
-	go.opentelemetry.io/collector/pdata/pprofile v0.125.1-0.20250509190408-4ca0f1829e0a // indirect
-	go.opentelemetry.io/collector/pdata/testdata v0.125.1-0.20250509190408-4ca0f1829e0a // indirect
-	go.opentelemetry.io/collector/pipeline v0.125.1-0.20250509190408-4ca0f1829e0a // indirect
-	go.opentelemetry.io/collector/processor/xprocessor v0.125.1-0.20250509190408-4ca0f1829e0a // indirect
-	go.opentelemetry.io/collector/semconv v0.125.1-0.20250509190408-4ca0f1829e0a // indirect
+	go.opentelemetry.io/collector/consumer/xconsumer v0.127.0 // indirect
+	go.opentelemetry.io/collector/featuregate v1.33.0 // indirect
+	go.opentelemetry.io/collector/internal/telemetry v0.127.0 // indirect
+	go.opentelemetry.io/collector/pdata/pprofile v0.127.0 // indirect
+	go.opentelemetry.io/collector/pdata/testdata v0.127.0 // indirect
+	go.opentelemetry.io/collector/pipeline v0.127.0 // indirect
+	go.opentelemetry.io/collector/processor/xprocessor v0.127.0 // indirect
+	go.opentelemetry.io/collector/semconv v0.127.0 // indirect
 	go.opentelemetry.io/contrib/bridges/otelzap v0.10.0 // indirect
 	go.opentelemetry.io/otel/log v0.11.0 // indirect
 	go.opentelemetry.io/otel/metric v1.35.0 // indirect
@@ -90,7 +90,7 @@ require (
 	golang.org/x/text v0.24.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250224174004-546df14abb99 // indirect
-	google.golang.org/grpc v1.72.0 // indirect
+	google.golang.org/grpc v1.72.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
