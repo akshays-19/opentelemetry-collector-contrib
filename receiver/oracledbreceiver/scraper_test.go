@@ -246,7 +246,7 @@ func TestSamplesQuery(t *testing.T) {
 				},
 				clientProviderFunc: test.dbclientFn,
 				id:                 component.ID{},
-				querySampleCfg:     QuerySample{Enabled: true},
+				querySampleCfg:     NewQuerySample(true),
 			}
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
 			defer func() {

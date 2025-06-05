@@ -36,8 +36,12 @@ type TopQueryCollection struct {
 	QueryCacheSize      int  `mapstructure:"query_cache_size"`
 }
 
-type QuerySample struct {
+type querySample struct {
 	Enabled bool `mapstructure:"enabled"`
+}
+
+func NewQuerySample(enabled bool) querySample {
+	return querySample{Enabled: enabled}
 }
 
 type Config struct {
@@ -51,7 +55,7 @@ type Config struct {
 	metadata.LogsBuilderConfig     `mapstructure:",squash"`
 
 	TopQueryCollection `mapstructure:"top_query_collection"`
-	QuerySample        `mapstructure:"query_sample_collection"`
+	querySample        `mapstructure:"query_sample_collection"`
 }
 
 func (c Config) Validate() error {
