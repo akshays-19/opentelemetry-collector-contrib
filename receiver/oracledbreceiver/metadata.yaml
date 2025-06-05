@@ -44,52 +44,52 @@ attributes:
     description: The child number of the query.
     type: string
   oracledb.query.application_wait_time:
-    description: Application wait time
+    description: The total time (in microseconds) a query spent waiting on the application before it could proceed with execution (reporting delta).
     type: double
   oracledb.query.buffer_gets:
-    description: Number of buffer gets
+    description: Number of logical reads (i.e., buffer cache accesses) performed by a query (reporting delta).
     type: int
   oracledb.query.cluster_wait_time:
-    description: Cluster wait time
+    description: Total time (in microseconds) that a query waited due to Oracle Real Application Clusters (RAC) coordination (reporting delta).
     type: double
   oracledb.query.concurrency_wait_time:
-    description: Concurrency wait time
+    description: Total time (in microseconds) a query spent waiting on concurrency-related events (reporting delta).
     type: double
   oracledb.query.cpu_time:
-    description: CPU time
+    description: Total time (in microseconds) that the CPU spent actively processing a query, excluding time spent waiting (reporting delta).
     type: double
   oracledb.query.direct_reads:
-    description: Number of direct reads
+    description: The number of direct path reads performed by a query — i.e., data blocks read directly from disk into the session’s memory (reporting delta).
     type: int
   oracledb.query.direct_writes:
-    description: Number of direct writes
+    description: The number of direct path write operations, where data is written directly to disk from user memory (reporting delta).
     type: int
   oracledb.query.disk_reads:
-    description: Number of disk reads
+    description: The number of physical reads a query performs — that is, the number of data blocks read from disk (reporting delta).
     type: int
   oracledb.query.elapsed_time:
-    description: Elapsed time
+    description: The total time (in microseconds) taken by a query from start to finish, including CPU time and all types of waits (reporting delta).
     type: double
   oracledb.query.executions:
-    description: Number of executions
+    description: The number of times a specific SQL query has been executed (reporting delta).
     type: int
   oracledb.query.physical_read_bytes:
-    description: Number of physical bytes read
+    description: The total number of bytes read from disk by a query (reporting delta).
     type: int
   oracledb.query.physical_read_requests:
-    description: Number of physical read requests
+    description: The number of physical I/O read operations performed by a query (reporting delta).
     type: int
   oracledb.query.physical_write_bytes:
-    description: Number of bytes written
+    description: The total number of bytes written to disk by a query (reporting delta).
     type: int
   oracledb.query.physical_write_requests:
-    description: Number of physical write requests
+    description: The number of times a query requested to write data to disk (reporting delta).
     type: int
   oracledb.query.rows_processed:
-    description: Number of rows returned
+    description: The total number of rows that a query has read, returned, or affected during its execution (reporting delta).
     type: int
   oracledb.query.user_io_wait_time:
-    description: User IO wait time
+    description: The total time (in microseconds) a query spent waiting for user I/O operations—such as reading or writing data to disk or network file systems (reporting delta).
     type: double
   db.server.name:
     description: The name of the server hosting the database.
