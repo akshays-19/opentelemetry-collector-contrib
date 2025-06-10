@@ -239,6 +239,10 @@ func TestSamplesQuery(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			logsCfg := metadata.DefaultLogsBuilderConfig()
+			logsCfg.Events.DbServerQuerySample.Enabled = true
+			logsCfg.ResourceAttributes.OracledbInstanceName.Enabled = true
+			logsCfg.ResourceAttributes.HostName.Enabled = true
 			scrpr := oracleScraper{
 				logger: zap.NewNop(),
 				dbProviderFunc: func() (*sql.DB, error) {
@@ -247,6 +251,7 @@ func TestSamplesQuery(t *testing.T) {
 				clientProviderFunc: test.dbclientFn,
 				id:                 component.ID{},
 				querySampleCfg:     newQuerySample(true),
+				lb:                 metadata.NewLogsBuilder(logsCfg, receivertest.NewNopSettings(metadata.Type)),
 			}
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
 			defer func() {
@@ -260,10 +265,11 @@ func TestSamplesQuery(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, 21, m.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0).Attributes().Len())
+				name, ok := m.ResourceLogs().At(0).Resource().Attributes().Get("oracledb.instance.name")
+				assert.True(t, ok)
+				assert.Empty(t, name.Str())
 			}
-			name, ok := m.ResourceLogs().At(0).Resource().Attributes().Get("oracledb.instance.name")
-			assert.True(t, ok)
-			assert.Empty(t, name.Str())
+
 		})
 	}
 }

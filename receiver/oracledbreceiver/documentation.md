@@ -379,6 +379,36 @@ events:
     enabled: false
 ```
 
+### db.server.query_sample
+
+sample query
+
+#### Attributes
+
+| Name | Description | Values |
+| ---- | ----------- | ------ |
+| db.query.text | The text of the database query being executed. | Any Str |
+| db.system.name | The database management system (DBMS) product as identified by the client instrumentation. | Any Str |
+| db.query.plan_hash_value | Binary hash value calculated on the query execution plan and used to identify similar query execution plans, reported in the HEX format. | Any Str |
+| db.machine | Identifies the name of the machine (host) from which the database client is connecting to the Oracle database. | Any Str |
+| db.query.id | Unique ID of the executed query. | Any Str |
+| oracledb.query.child_number | The child number of the query. | Any Str |
+| db.query.session_id | ID of the Oracle Server session. | Any Str |
+| db.query.serial_number | Serial number associated with a session. | Any Str |
+| db.query.process | The operating system process ID (PID) associated with a session. | Any Str |
+| oracledb.username | Database user name under which a session is connected to | Any Str |
+| oracledb.schema_name | Oracle schema under which SQL statements are being executed | Any Str |
+| oracledb.query.program | Name of the client program or tool that initiated the Oracle database session. | Any Str |
+| oracledb.query.module | Logical module name of the client application that initiated a query or session. | Any Str |
+| oracledb.query.status | Execution state or result of a database query or session. | Any Str |
+| oracledb.query.state | Current state of the query or the session executing it. | Any Str |
+| oracledb.query.wait_class | The category of wait events a query or session is currently experiencing in Oracle Database. | Any Str |
+| oracledb.query.event | The specific wait event that a query or session is currently experiencing. | Any Str |
+| oracledb.query.object_name | Name of the database object that a query is accessing. | Any Str |
+| oracledb.query.object_type | Type of the database object that a query is accessing. | Any Str |
+| oracledb.query.os_user | Name of the operating system user that initiated or is running the Oracle database session. | Any Str |
+| oracledb.query.duration | Total time taken by a database query to execute. | Any Double |
+
 ### db.server.top_query
 
 top query
