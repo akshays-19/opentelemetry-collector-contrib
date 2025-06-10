@@ -240,7 +240,6 @@ func TestSamplesQuery(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			logsCfg := metadata.DefaultLogsBuilderConfig()
-			logsCfg.Events.DbServerQuerySample.Enabled = true
 			logsCfg.ResourceAttributes.OracledbInstanceName.Enabled = true
 			logsCfg.ResourceAttributes.HostName.Enabled = true
 			scrpr := oracleScraper{
@@ -250,9 +249,11 @@ func TestSamplesQuery(t *testing.T) {
 				},
 				clientProviderFunc: test.dbclientFn,
 				id:                 component.ID{},
-				querySampleCfg:     newQuerySample(true),
 				lb:                 metadata.NewLogsBuilder(logsCfg, receivertest.NewNopSettings(metadata.Type)),
+				logsBuilderConfig:  metadata.DefaultLogsBuilderConfig(),
 			}
+			scrpr.logsBuilderConfig.Events.DbServerTopQuery.Enabled = false
+			scrpr.logsBuilderConfig.Events.DbServerQuerySample.Enabled = true
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
 			defer func() {
 				assert.NoError(t, scrpr.shutdown(context.Background()))
@@ -274,7 +275,7 @@ func TestSamplesQuery(t *testing.T) {
 	}
 }
 
-func TestScraper_ScrapeLogs(t *testing.T) {
+func TestScraper_ScrapeTopNLogs(t *testing.T) {
 	var metricRowData []metricRow
 	var logRowData []metricRow
 	tests := []struct {
@@ -335,12 +336,8 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			logsCfg := metadata.DefaultLogsBuilderConfig()
-			logsCfg.Events.DbServerTopQuery.Enabled = true
-			logsCfg.ResourceAttributes.OracledbInstanceName.Enabled = true
 			logsCfg.ResourceAttributes.HostName.Enabled = true
 			metricsCfg := metadata.DefaultMetricsBuilderConfig()
-			metricsCfg.Metrics.OracledbConsistentGets.Enabled = true
-			metricsCfg.Metrics.OracledbDbBlockGets.Enabled = true
 			lruCache, _ := lru.New[string, map[string]int64](500)
 			lruCache.Add("fxk8aq3nds8aw:0", cacheValue)
 
@@ -356,10 +353,13 @@ func TestScraper_ScrapeLogs(t *testing.T) {
 				metricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
 				logsBuilderConfig:    metadata.DefaultLogsBuilderConfig(),
 				metricCache:          lruCache,
-				topQueryCollectCfg:   TopQueryCollection{Enabled: true, MaxQuerySampleCount: 5000, TopQueryCount: 200},
+				topQueryCollectCfg:   TopQueryCollection{MaxQuerySampleCount: 5000, TopQueryCount: 200},
 				instanceName:         "oracle-instance-sample-1",
 				hostName:             "oracle-host-sample-1",
 			}
+
+			scrpr.logsBuilderConfig.Events.DbServerTopQuery.Enabled = true
+			scrpr.logsBuilderConfig.Events.DbServerQuerySample.Enabled = false
 
 			err := scrpr.start(context.Background(), componenttest.NewNopHost())
 			defer func() {

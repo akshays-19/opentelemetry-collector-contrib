@@ -130,7 +130,6 @@ type oracleScraper struct {
 	logsBuilderConfig          metadata.LogsBuilderConfig
 	metricCache                *lru.Cache[string, map[string]int64]
 	topQueryCollectCfg         TopQueryCollection
-	querySampleCfg             querySample
 }
 
 func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig metadata.MetricsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig, logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string, hostName string) (scraper.Metrics, error) {
@@ -149,7 +148,7 @@ func newScraper(metricsBuilder *metadata.MetricsBuilder, metricsBuilderConfig me
 
 func newLogsScraper(logsBuilder *metadata.LogsBuilder, logsBuilderConfig metadata.LogsBuilderConfig, scrapeCfg scraperhelper.ControllerConfig,
 	logger *zap.Logger, providerFunc dbProviderFunc, clientProviderFunc clientProviderFunc, instanceName string, metricCache *lru.Cache[string, map[string]int64],
-	topQueryCollectCfg TopQueryCollection, querySampleCfg querySample, hostName string,
+	topQueryCollectCfg TopQueryCollection, hostName string,
 ) (scraper.Logs, error) {
 	s := &oracleScraper{
 		lb:                 logsBuilder,
@@ -161,7 +160,6 @@ func newLogsScraper(logsBuilder *metadata.LogsBuilder, logsBuilderConfig metadat
 		instanceName:       instanceName,
 		metricCache:        metricCache,
 		topQueryCollectCfg: topQueryCollectCfg,
-		querySampleCfg:     querySampleCfg,
 		hostName:           hostName,
 	}
 	return scraper.NewLogs(s.scrapeLogs, scraper.WithShutdown(s.shutdown), scraper.WithStart(s.start))
@@ -518,7 +516,7 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 	logs := plog.NewLogs()
 	var scrapeErrors []error
 
-	if s.topQueryCollectCfg.Enabled {
+	if s.logsBuilderConfig.Events.DbServerTopQuery.Enabled {
 		topNLogs, topNCollectionErrors := s.collectTopNMetricData(ctx)
 		if topNCollectionErrors != nil {
 			scrapeErrors = append(scrapeErrors, topNCollectionErrors)
@@ -528,7 +526,7 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 
 	}
 
-	if s.querySampleCfg.Enabled {
+	if s.logsBuilderConfig.Events.DbServerQuerySample.Enabled {
 		sampleLogs, samplesCollectionErrors := s.collectQuerySamples(ctx)
 		if samplesCollectionErrors != nil {
 			scrapeErrors = append(scrapeErrors, samplesCollectionErrors)
