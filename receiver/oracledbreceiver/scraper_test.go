@@ -270,7 +270,6 @@ func TestSamplesQuery(t *testing.T) {
 				assert.True(t, ok)
 				assert.Empty(t, name.Str())
 			}
-
 		})
 	}
 }
