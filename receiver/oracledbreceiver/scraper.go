@@ -523,7 +523,6 @@ func (s *oracleScraper) scrapeLogs(ctx context.Context) (plog.Logs, error) {
 		} else {
 			topNLogs.ResourceLogs().CopyTo(logs.ResourceLogs())
 		}
-
 	}
 
 	if s.logsBuilderConfig.Events.DbServerQuerySample.Enabled {
