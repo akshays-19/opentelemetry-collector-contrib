@@ -128,10 +128,10 @@ func TestLogsBuilder(t *testing.T) {
 
 			defaultEventsCount := 0
 			allEventsCount := 0
-			defaultEventsCount++
+
 			allEventsCount++
 			lb.RecordDbServerQuerySampleEvent(ctx, timestamp, "db.query.text-val", "db.system.name-val", "db.query.plan_hash_value-val", "db.machine-val", "db.query.id-val", "oracledb.query.child_number-val", "db.query.session_id-val", "db.query.serial_number-val", "db.query.process-val", "oracledb.username-val", "oracledb.schema_name-val", "oracledb.query.program-val", "oracledb.query.module-val", "oracledb.query.status-val", "oracledb.query.state-val", "oracledb.query.wait_class-val", "oracledb.query.event-val", "oracledb.query.object_name-val", "oracledb.query.object_type-val", "oracledb.query.os_user-val", 23.100000)
-			defaultEventsCount++
+
 			allEventsCount++
 			lb.RecordDbServerTopQueryEvent(ctx, timestamp, "db.query.text-val", "oracledb.query_plan-val", "oracledb.query.sql_id-val", "oracledb.query.child_number-val", 36.100000, 26, 32.100000, 36.100000, 23.100000, 27, 28, 25, 27.100000, 25, 34, 37, 35, 38, 29, 32.100000, "db.server.name-val")
 

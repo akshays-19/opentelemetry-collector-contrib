@@ -99,11 +99,6 @@ func createLogsReceiverFunc(sqlOpenerFunc sqlOpenerFunc, clientProviderFunc clie
 	) (receiver.Logs, error) {
 		sqlCfg := cfg.(*Config)
 
-		if !sqlCfg.Events.DbServerTopQuery.Enabled && !sqlCfg.Events.DbServerQuerySample.Enabled {
-			settings.Logger.Debug("TopQueryCollection and QuerySample are not enabled for Oracle receiver.Skipping Log scrapper")
-			return nil, nil
-		}
-
 		logsBuilder := metadata.NewLogsBuilder(sqlCfg.LogsBuilderConfig, settings)
 
 		instanceName, err := getInstanceName(getDataSource(*sqlCfg))

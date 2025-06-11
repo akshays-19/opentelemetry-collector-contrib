@@ -154,7 +154,7 @@ attributes:
 
 events:
   db.server.top_query:
-    enabled: true
+    enabled: false
     description: top query
     attributes:
       - db.query.text
@@ -179,7 +179,7 @@ events:
       - oracledb.query.user_io_wait_time
       - db.server.name
   db.server.query_sample:
-    enabled: true
+    enabled: false
     description: sample query
     attributes:
       - db.query.text
