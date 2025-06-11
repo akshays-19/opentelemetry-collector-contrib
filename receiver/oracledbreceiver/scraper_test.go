@@ -242,6 +242,8 @@ func TestSamplesQuery(t *testing.T) {
 			logsCfg := metadata.DefaultLogsBuilderConfig()
 			logsCfg.ResourceAttributes.OracledbInstanceName.Enabled = true
 			logsCfg.ResourceAttributes.HostName.Enabled = true
+			logsCfg.Events.DbServerTopQuery.Enabled = false
+			logsCfg.Events.DbServerQuerySample.Enabled = true
 			scrpr := oracleScraper{
 				logger: zap.NewNop(),
 				dbProviderFunc: func() (*sql.DB, error) {
@@ -336,6 +338,8 @@ func TestScraper_ScrapeTopNLogs(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			logsCfg := metadata.DefaultLogsBuilderConfig()
 			logsCfg.ResourceAttributes.HostName.Enabled = true
+			logsCfg.Events.DbServerTopQuery.Enabled = true
+			logsCfg.Events.DbServerQuerySample.Enabled = false
 			metricsCfg := metadata.DefaultMetricsBuilderConfig()
 			lruCache, _ := lru.New[string, map[string]int64](500)
 			lruCache.Add("fxk8aq3nds8aw:0", cacheValue)
