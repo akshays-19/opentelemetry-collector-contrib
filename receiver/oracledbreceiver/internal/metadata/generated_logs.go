@@ -18,7 +18,7 @@ type eventDbServerQuerySample struct {
 	config EventConfig         // event config provided by user.
 }
 
-func (e *eventDbServerQuerySample) recordEvent(ctx context.Context, timestamp pcommon.Timestamp, dbQueryTextAttributeValue string, dbSystemNameAttributeValue string, dbQueryPlanHashValueAttributeValue string, dbMachineAttributeValue string, dbQueryIDAttributeValue string, oracledbQueryChildNumberAttributeValue string, dbQuerySessionIDAttributeValue string, dbQuerySerialNumberAttributeValue string, dbQueryProcessAttributeValue string, oracledbUsernameAttributeValue string, oracledbSchemaNameAttributeValue string, oracledbQueryProgramAttributeValue string, oracledbQueryModuleAttributeValue string, oracledbQueryStatusAttributeValue string, oracledbQueryStateAttributeValue string, oracledbQueryWaitClassAttributeValue string, oracledbQueryEventAttributeValue string, oracledbQueryObjectNameAttributeValue string, oracledbQueryObjectTypeAttributeValue string, oracledbQueryOsUserAttributeValue string, oracledbQueryDurationAttributeValue float64) {
+func (e *eventDbServerQuerySample) recordEvent(ctx context.Context, timestamp pcommon.Timestamp, dbQueryTextAttributeValue string, dbSystemNameAttributeValue string, dbQueryPlanHashValueAttributeValue string, clientAddressAttributeValue string, dbQueryIDAttributeValue string, oracledbQueryChildNumberAttributeValue string, dbQuerySessionIDAttributeValue string, dbQuerySerialNumberAttributeValue string, dbQueryProcessAttributeValue string, userNameAttributeValue string, oracledbSchemaNameAttributeValue string, oracledbQueryProgramAttributeValue string, oracledbQueryModuleAttributeValue string, oracledbQueryStatusAttributeValue string, oracledbQueryStateAttributeValue string, oracledbQueryWaitClassAttributeValue string, oracledbQueryEventAttributeValue string, oracledbQueryObjectNameAttributeValue string, oracledbQueryObjectTypeAttributeValue string, oracledbQueryOsUserAttributeValue string, oracledbQueryDurationAttributeValue float64) {
 	if !e.config.Enabled {
 		return
 	}
@@ -34,13 +34,13 @@ func (e *eventDbServerQuerySample) recordEvent(ctx context.Context, timestamp pc
 	lr.Attributes().PutStr("db.query.text", dbQueryTextAttributeValue)
 	lr.Attributes().PutStr("db.system.name", dbSystemNameAttributeValue)
 	lr.Attributes().PutStr("db.query.plan_hash_value", dbQueryPlanHashValueAttributeValue)
-	lr.Attributes().PutStr("db.machine", dbMachineAttributeValue)
+	lr.Attributes().PutStr("client.address", clientAddressAttributeValue)
 	lr.Attributes().PutStr("db.query.id", dbQueryIDAttributeValue)
 	lr.Attributes().PutStr("oracledb.query.child_number", oracledbQueryChildNumberAttributeValue)
 	lr.Attributes().PutStr("db.query.session_id", dbQuerySessionIDAttributeValue)
 	lr.Attributes().PutStr("db.query.serial_number", dbQuerySerialNumberAttributeValue)
 	lr.Attributes().PutStr("db.query.process", dbQueryProcessAttributeValue)
-	lr.Attributes().PutStr("oracledb.username", oracledbUsernameAttributeValue)
+	lr.Attributes().PutStr("user.name", userNameAttributeValue)
 	lr.Attributes().PutStr("oracledb.schema_name", oracledbSchemaNameAttributeValue)
 	lr.Attributes().PutStr("oracledb.query.program", oracledbQueryProgramAttributeValue)
 	lr.Attributes().PutStr("oracledb.query.module", oracledbQueryModuleAttributeValue)
@@ -248,8 +248,8 @@ func (lb *LogsBuilder) Emit(options ...ResourceLogsOption) plog.Logs {
 }
 
 // RecordDbServerQuerySampleEvent adds a log record of db.server.query_sample event.
-func (lb *LogsBuilder) RecordDbServerQuerySampleEvent(ctx context.Context, timestamp pcommon.Timestamp, dbQueryTextAttributeValue string, dbSystemNameAttributeValue string, dbQueryPlanHashValueAttributeValue string, dbMachineAttributeValue string, dbQueryIDAttributeValue string, oracledbQueryChildNumberAttributeValue string, dbQuerySessionIDAttributeValue string, dbQuerySerialNumberAttributeValue string, dbQueryProcessAttributeValue string, oracledbUsernameAttributeValue string, oracledbSchemaNameAttributeValue string, oracledbQueryProgramAttributeValue string, oracledbQueryModuleAttributeValue string, oracledbQueryStatusAttributeValue string, oracledbQueryStateAttributeValue string, oracledbQueryWaitClassAttributeValue string, oracledbQueryEventAttributeValue string, oracledbQueryObjectNameAttributeValue string, oracledbQueryObjectTypeAttributeValue string, oracledbQueryOsUserAttributeValue string, oracledbQueryDurationAttributeValue float64) {
-	lb.eventDbServerQuerySample.recordEvent(ctx, timestamp, dbQueryTextAttributeValue, dbSystemNameAttributeValue, dbQueryPlanHashValueAttributeValue, dbMachineAttributeValue, dbQueryIDAttributeValue, oracledbQueryChildNumberAttributeValue, dbQuerySessionIDAttributeValue, dbQuerySerialNumberAttributeValue, dbQueryProcessAttributeValue, oracledbUsernameAttributeValue, oracledbSchemaNameAttributeValue, oracledbQueryProgramAttributeValue, oracledbQueryModuleAttributeValue, oracledbQueryStatusAttributeValue, oracledbQueryStateAttributeValue, oracledbQueryWaitClassAttributeValue, oracledbQueryEventAttributeValue, oracledbQueryObjectNameAttributeValue, oracledbQueryObjectTypeAttributeValue, oracledbQueryOsUserAttributeValue, oracledbQueryDurationAttributeValue)
+func (lb *LogsBuilder) RecordDbServerQuerySampleEvent(ctx context.Context, timestamp pcommon.Timestamp, dbQueryTextAttributeValue string, dbSystemNameAttributeValue string, dbQueryPlanHashValueAttributeValue string, clientAddressAttributeValue string, dbQueryIDAttributeValue string, oracledbQueryChildNumberAttributeValue string, dbQuerySessionIDAttributeValue string, dbQuerySerialNumberAttributeValue string, dbQueryProcessAttributeValue string, userNameAttributeValue string, oracledbSchemaNameAttributeValue string, oracledbQueryProgramAttributeValue string, oracledbQueryModuleAttributeValue string, oracledbQueryStatusAttributeValue string, oracledbQueryStateAttributeValue string, oracledbQueryWaitClassAttributeValue string, oracledbQueryEventAttributeValue string, oracledbQueryObjectNameAttributeValue string, oracledbQueryObjectTypeAttributeValue string, oracledbQueryOsUserAttributeValue string, oracledbQueryDurationAttributeValue float64) {
+	lb.eventDbServerQuerySample.recordEvent(ctx, timestamp, dbQueryTextAttributeValue, dbSystemNameAttributeValue, dbQueryPlanHashValueAttributeValue, clientAddressAttributeValue, dbQueryIDAttributeValue, oracledbQueryChildNumberAttributeValue, dbQuerySessionIDAttributeValue, dbQuerySerialNumberAttributeValue, dbQueryProcessAttributeValue, userNameAttributeValue, oracledbSchemaNameAttributeValue, oracledbQueryProgramAttributeValue, oracledbQueryModuleAttributeValue, oracledbQueryStatusAttributeValue, oracledbQueryStateAttributeValue, oracledbQueryWaitClassAttributeValue, oracledbQueryEventAttributeValue, oracledbQueryObjectNameAttributeValue, oracledbQueryObjectTypeAttributeValue, oracledbQueryOsUserAttributeValue, oracledbQueryDurationAttributeValue)
 }
 
 // RecordDbServerTopQueryEvent adds a log record of db.server.top_query event.

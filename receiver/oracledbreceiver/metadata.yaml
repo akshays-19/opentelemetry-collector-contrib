@@ -100,7 +100,7 @@ attributes:
   db.query.plan_hash_value:
     description: Binary hash value calculated on the query execution plan and used to identify similar query execution plans, reported in the HEX format.
     type: string
-  db.machine:
+  client.address:
     description: Identifies the name of the machine (host) from which the database client is connecting to the Oracle database.
     type: string
   db.query.id:
@@ -115,7 +115,7 @@ attributes:
   db.query.process:
     description: The operating system process ID (PID) associated with a session.
     type: string
-  oracledb.username:
+  user.name:
     description: Database user name under which a session is connected to
     type: string
   oracledb.schema_name:
@@ -185,13 +185,13 @@ events:
       - db.query.text
       - db.system.name
       - db.query.plan_hash_value
-      - db.machine
+      - client.address
       - db.query.id
       - oracledb.query.child_number
       - db.query.session_id
       - db.query.serial_number
       - db.query.process
-      - oracledb.username
+      - user.name
       - oracledb.schema_name
       - oracledb.query.program
       - oracledb.query.module
