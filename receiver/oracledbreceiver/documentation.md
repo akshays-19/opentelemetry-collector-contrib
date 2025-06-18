@@ -399,25 +399,25 @@ sample query
 | ---- | ----------- | ------ |
 | db.query.text | The text of the database query being executed. | Any Str |
 | db.system.name | The database management system (DBMS) product as identified by the client instrumentation. | Any Str |
-| db.query.plan_hash_value | Binary hash value calculated on the query execution plan and used to identify similar query execution plans, reported in the HEX format. | Any Str |
-| client.address | Identifies the name of the machine (host) from which the database client is connecting to the Oracle database. | Any Str |
-| db.query.id | Unique ID of the executed query. | Any Str |
-| oracledb.query.child_number | The child number of the query. | Any Str |
-| db.query.session_id | ID of the Oracle Server session. | Any Str |
-| db.query.serial_number | Serial number associated with a session. | Any Str |
-| db.query.process | The operating system process ID (PID) associated with a session. | Any Str |
 | user.name | Database user name under which a session is connected to | Any Str |
-| oracledb.schema_name | Oracle schema under which SQL statements are being executed | Any Str |
-| oracledb.query.program | Name of the client program or tool that initiated the Oracle database session. | Any Str |
-| oracledb.query.module | Logical module name of the client application that initiated a query or session. | Any Str |
-| oracledb.query.status | Execution state or result of a database query or session. | Any Str |
-| oracledb.query.state | Current state of the query or the session executing it. | Any Str |
-| oracledb.query.wait_class | The category of wait events a query or session is currently experiencing in Oracle Database. | Any Str |
-| oracledb.query.event | The specific wait event that a query or session is currently experiencing. | Any Str |
-| oracledb.query.object_name | Name of the database object that a query is accessing. | Any Str |
-| oracledb.query.object_type | Type of the database object that a query is accessing. | Any Str |
-| oracledb.query.os_user | Name of the operating system user that initiated or is running the Oracle database session. | Any Str |
-| oracledb.query.duration | Total time taken by a database query to execute. | Any Double |
+| client.address | Identifies the name of the machine (host) from which the database client is connecting to the Oracle database. | Any Str |
+| oracledb.plan_hash_value | Binary hash value calculated on the query execution plan and used to identify similar query execution plans, reported in the HEX format. | Any Str |
+| oracledb.sql_id | The SQL ID of the query. | Any Str |
+| oracledb.child_number | The child number of the query. | Any Str |
+| oracledb.sid | ID of the Oracle Server session. | Any Str |
+| oracledb.serial | Serial number associated with a session. | Any Str |
+| oracledb.process | The operating system process ID (PID) associated with a session. | Any Str |
+| oracledb.schemaname | Oracle schema under which SQL statements are being executed | Any Str |
+| oracledb.program | Name of the client program or tool that initiated the Oracle database session. | Any Str |
+| oracledb.module | Logical module name of the client application that initiated a query or session. | Any Str |
+| oracledb.status | Execution state or result of a database query or session. | Any Str |
+| oracledb.state | Current state of the query or the session executing it. | Any Str |
+| oracledb.wait_class | The category of wait events a query or session is currently experiencing in Oracle Database. | Any Str |
+| oracledb.event | The specific wait event that a query or session is currently experiencing. | Any Str |
+| oracledb.object_name | Name of the database object that a query is accessing. | Any Str |
+| oracledb.object_type | Type of the database object that a query is accessing. | Any Str |
+| oracledb.osuser | Name of the operating system user that initiated or is running the Oracle database session. | Any Str |
+| oracledb.duration_sec | Total time taken by a database query to execute. | Any Double |
 
 ### db.server.top_query
 
@@ -427,27 +427,28 @@ top query
 
 | Name | Description | Values |
 | ---- | ----------- | ------ |
+| db.system.name | The database management system (DBMS) product as identified by the client instrumentation. | Any Str |
+| db.server.name | The name of the server hosting the database. | Any Str |
 | db.query.text | The text of the database query being executed. | Any Str |
 | oracledb.query_plan | The query execution plan used by the SQL Server. | Any Str |
-| oracledb.query.sql_id | The SQL ID of the query. | Any Str |
-| oracledb.query.child_number | The child number of the query. | Any Str |
-| oracledb.query.application_wait_time | The total time (in microseconds) a query spent waiting on the application before it could proceed with execution (reporting delta). | Any Double |
-| oracledb.query.buffer_gets | Number of logical reads (i.e., buffer cache accesses) performed by a query (reporting delta). | Any Int |
-| oracledb.query.cluster_wait_time | Total time (in microseconds) that a query waited due to Oracle Real Application Clusters (RAC) coordination (reporting delta). | Any Double |
-| oracledb.query.concurrency_wait_time | Total time (in microseconds) a query spent waiting on concurrency-related events (reporting delta). | Any Double |
-| oracledb.query.cpu_time | Total time (in microseconds) that the CPU spent actively processing a query, excluding time spent waiting (reporting delta). | Any Double |
-| oracledb.query.direct_reads | The number of direct path reads performed by a query — i.e., data blocks read directly from disk into the session’s memory (reporting delta). | Any Int |
-| oracledb.query.direct_writes | The number of direct path write operations, where data is written directly to disk from user memory (reporting delta). | Any Int |
-| oracledb.query.disk_reads | The number of physical reads a query performs — that is, the number of data blocks read from disk (reporting delta). | Any Int |
-| oracledb.query.elapsed_time | The total time (in microseconds) taken by a query from start to finish, including CPU time and all types of waits (reporting delta). | Any Double |
-| oracledb.query.executions | The number of times a specific SQL query has been executed (reporting delta). | Any Int |
-| oracledb.query.physical_read_bytes | The total number of bytes read from disk by a query (reporting delta). | Any Int |
-| oracledb.query.physical_read_requests | The number of physical I/O read operations performed by a query (reporting delta). | Any Int |
-| oracledb.query.physical_write_bytes | The total number of bytes written to disk by a query (reporting delta). | Any Int |
-| oracledb.query.physical_write_requests | The number of times a query requested to write data to disk (reporting delta). | Any Int |
-| oracledb.query.rows_processed | The total number of rows that a query has read, returned, or affected during its execution (reporting delta). | Any Int |
-| oracledb.query.user_io_wait_time | The total time (in microseconds) a query spent waiting for user I/O operations—such as reading or writing data to disk or network file systems (reporting delta). | Any Double |
-| db.server.name | The name of the server hosting the database. | Any Str |
+| oracledb.sql_id | The SQL ID of the query. | Any Str |
+| oracledb.child_number | The child number of the query. | Any Str |
+| oracledb.application_wait_time | The total time (in microseconds) a query spent waiting on the application before it could proceed with execution (reporting delta). | Any Double |
+| oracledb.buffer_gets | Number of logical reads (i.e., buffer cache accesses) performed by a query (reporting delta). | Any Int |
+| oracledb.cluster_wait_time | Total time (in microseconds) that a query waited due to Oracle Real Application Clusters (RAC) coordination (reporting delta). | Any Double |
+| oracledb.concurrency_wait_time | Total time (in microseconds) a query spent waiting on concurrency-related events (reporting delta). | Any Double |
+| oracledb.cpu_time | Total time (in microseconds) that the CPU spent actively processing a query, excluding time spent waiting (reporting delta). | Any Double |
+| oracledb.direct_reads | The number of direct path reads performed by a query — i.e., data blocks read directly from disk into the session’s memory (reporting delta). | Any Int |
+| oracledb.direct_writes | The number of direct path write operations, where data is written directly to disk from user memory (reporting delta). | Any Int |
+| oracledb.disk_reads | The number of physical reads a query performs — that is, the number of data blocks read from disk (reporting delta). | Any Int |
+| oracledb.elapsed_time | The total time (in microseconds) taken by a query from start to finish, including CPU time and all types of waits (reporting delta). | Any Double |
+| oracledb.executions | The number of times a specific SQL query has been executed (reporting delta). | Any Int |
+| oracledb.physical_read_bytes | The total number of bytes read from disk by a query (reporting delta). | Any Int |
+| oracledb.physical_read_requests | The number of physical I/O read operations performed by a query (reporting delta). | Any Int |
+| oracledb.physical_write_bytes | The total number of bytes written to disk by a query (reporting delta). | Any Int |
+| oracledb.physical_write_requests | The number of times a query requested to write data to disk (reporting delta). | Any Int |
+| oracledb.rows_processed | The total number of rows that a query has read, returned, or affected during its execution (reporting delta). | Any Int |
+| oracledb.user_io_wait_time | The total time (in microseconds) a query spent waiting for user I/O operations—such as reading or writing data to disk or network file systems (reporting delta). | Any Double |
 
 ## Resource Attributes
 

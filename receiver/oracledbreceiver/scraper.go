@@ -587,8 +587,8 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context) (plog.Logs, err
 			scrapeErrors = append(scrapeErrors, fmt.Errorf("failed to parse int64 for Duration, value was %s: %w", row[duration], err))
 		}
 
-		s.lb.RecordDbServerQuerySampleEvent(ctx, timestamp, obfuscatedSQL, dbSystemNameVal, queryPlanHashVal, row[hostName], row[sqlID], row[sqlChildNumber],
-			row[sid], row[serialNumber], row[process], row[username], row[schemaName], row[program], row[module], row[status], row[state], row[waitclass],
+		s.lb.RecordDbServerQuerySampleEvent(ctx, timestamp, obfuscatedSQL, dbSystemNameVal, row[hostName], row[username], queryPlanHashVal, row[sqlID], row[sqlChildNumber],
+			row[sid], row[serialNumber], row[process], row[schemaName], row[program], row[module], row[status], row[state], row[waitclass],
 			row[event], row[objectName], row[objectType], row[osUser], queryDuration)
 	}
 
@@ -720,6 +720,8 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context) (plog.Logs, e
 
 		s.lb.RecordDbServerTopQueryEvent(context.Background(),
 			timestamp,
+			dbSystemNameVal,
+			dbSystemNameVal,
 			hit.queryText,
 			planString, hit.sqlID, hit.childNumber,
 			asFloatInMicrosec(hit.metrics[applicationWaitTimeMetric]),
@@ -737,8 +739,7 @@ func (s *oracleScraper) collectTopNMetricData(ctx context.Context) (plog.Logs, e
 			hit.metrics[physicalWriteBytesMetric],
 			hit.metrics[physicalWriteRequestsMetric],
 			hit.metrics[rowsProcessedMetric],
-			asFloatInMicrosec(hit.metrics[userIoWaitTimeMetric]),
-			dbSystemNameVal)
+			asFloatInMicrosec(hit.metrics[userIoWaitTimeMetric]))
 	}
 
 	hitCount := len(hits)
