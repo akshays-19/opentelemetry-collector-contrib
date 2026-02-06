@@ -976,6 +976,8 @@ func (c *postgreSQLClient) getQuerySamples(ctx context.Context, limit int64, new
 		currentAttributes[string(semconv.DBNamespaceKey)] = row[querySampleColumnDatname]
 		currentAttributes[string(semconv.UserNameKey)] = row[querySampleColumnUsename]
 		currentAttributes[postgresqlTotalExecTimeAttributeName] = duration
+		// Store normalized query for EXPLAIN (with $1, $2 placeholders from pg_stat_statements)
+		currentAttributes[dbAttributePrefix+querySampleColumnNormalizedQuery] = row[querySampleColumnNormalizedQuery]
 		finalAttributes = append(finalAttributes, currentAttributes)
 	}
 
