@@ -124,9 +124,12 @@ func createLogsReceiver(
 
 	opts := make([]scraperhelper.ControllerOption, 0)
 
+	// Create shared query plan cache for EXPLAIN functionality
+	// Used by both query sample and top query scrapers to avoid duplicate EXPLAINs
+	sharedQueryPlanCache := newTTLCache[string](cfg.TopQueryCollection.QueryPlanCacheSize, cfg.TopQueryCollection.QueryPlanCacheTTL)
+
 	if cfg.Events.DbServerQuerySample.Enabled {
-		// Use TopQueryCollection cache settings for EXPLAIN functionality
-		ns := newPostgreSQLScraper(params, cfg, clientFactory, newCache(1), newTTLCache[string](cfg.TopQueryCollection.QueryPlanCacheSize, cfg.TopQueryCollection.QueryPlanCacheTTL))
+		ns := newPostgreSQLScraper(params, cfg, clientFactory, newCache(1), sharedQueryPlanCache)
 		s, err := scraper.NewLogs(func(ctx context.Context) (plog.Logs, error) {
 			return ns.scrapeQuerySamples(ctx, cfg.QuerySampleCollection.MaxRowsPerQuery, cfg.QuerySampleCollection.MaxExplainEachInterval)
 		}, scraper.WithShutdown(ns.shutdown))
@@ -143,7 +146,7 @@ func createLogsReceiver(
 
 	if cfg.Events.DbServerTopQuery.Enabled {
 		// we have 10 updated only attributes. so we set the cache size accordingly.
-		ns := newPostgreSQLScraper(params, cfg, clientFactory, newCache(int(cfg.TopQueryCollection.TopNQuery*10*2)), newTTLCache[string](cfg.TopQueryCollection.QueryPlanCacheSize, cfg.TopQueryCollection.QueryPlanCacheTTL))
+		ns := newPostgreSQLScraper(params, cfg, clientFactory, newCache(int(cfg.TopQueryCollection.TopNQuery*10*2)), sharedQueryPlanCache)
 		s, err := scraper.NewLogs(func(ctx context.Context) (plog.Logs, error) {
 			return ns.scrapeTopQuery(ctx, cfg.TopQueryCollection.MaxRowsPerQuery, cfg.TopQueryCollection.TopNQuery, cfg.TopQueryCollection.MaxExplainEachInterval)
 		}, scraper.WithShutdown(ns.shutdown))
