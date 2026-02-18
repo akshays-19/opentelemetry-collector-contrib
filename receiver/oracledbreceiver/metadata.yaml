@@ -186,6 +186,7 @@ events:
       - network.peer.address
       - network.peer.port
       - oracledb.plan_hash_value
+      - oracledb.query_plan
       - oracledb.sql_id
       - oracledb.child_number
       - oracledb.child_address

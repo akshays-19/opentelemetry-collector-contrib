@@ -326,6 +326,15 @@ var samplesQueryResponses = map[string][]metricRow{
 	}},
 }
 
+var samplesPlanQueryResponse = []metricRow{
+	{
+		"CHILD_ADDRESS": "SDF3SDF1234D", "OPERATION": "SELECT STATEMENT", "OPTIONS": "", "COST": "10", "CARDINALITY": "1", "DEPTH": "0", "ID": "0",
+	},
+	{
+		"CHILD_ADDRESS": "SDF3SDF1234D", "OPERATION": "TABLE ACCESS", "OPTIONS": "FULL", "COST": "10", "CARDINALITY": "1", "DEPTH": "1", "ID": "1",
+	},
+}
+
 func TestSamplesQuery(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -335,18 +344,30 @@ func TestSamplesQuery(t *testing.T) {
 		{
 			name: "valid",
 			dbclientFn: func(_ *sql.DB, s string, _ *zap.Logger) dbClient {
+				if s == samplesQuery {
+					return &fakeDbClient{
+						Responses: [][]metricRow{
+							samplesQueryResponses[s],
+						},
+					}
+				}
 				return &fakeDbClient{
 					Responses: [][]metricRow{
-						samplesQueryResponses[s],
+						samplesPlanQueryResponse,
 					},
 				}
 			},
 		},
 		{
 			name: "bad samples data",
-			dbclientFn: func(_ *sql.DB, _ string, _ *zap.Logger) dbClient {
+			dbclientFn: func(_ *sql.DB, s string, _ *zap.Logger) dbClient {
+				if s == samplesQuery {
+					return &fakeDbClient{Responses: [][]metricRow{
+						samplesQueryResponses["invalidQuery"],
+					}}
+				}
 				return &fakeDbClient{Responses: [][]metricRow{
-					samplesQueryResponses["invalidQuery"],
+					{},
 				}}
 			},
 			errWanted: `failed to parse int64 for Duration, value was : strconv.ParseFloat: parsing "": invalid syntax`,
