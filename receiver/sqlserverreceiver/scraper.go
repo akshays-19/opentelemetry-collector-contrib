@@ -182,7 +182,30 @@ func (s *sqlServerScraperHelper) setupResourceBuilder(row sqlquery.StringMap) *m
 		rb.SetServerPort(int64(s.config.Port))
 	}
 
+	// Apply resource attribute overrides (override priority: resource_attributes_override > auto-generated)
+	s.applyResourceOverrides(rb)
+
 	return rb
+}
+
+// applyResourceOverrides applies user-defined resource attribute overrides to the ResourceBuilder
+func (s *sqlServerScraperHelper) applyResourceOverrides(rb *metadata.ResourceBuilder) {
+	for key, value := range s.config.ResourceAttributesOverride {
+		switch key {
+		case "service.instance.id":
+			rb.SetServiceInstanceID(value)
+		case "service.name":
+			rb.SetServiceName(value)
+		case "service.namespace":
+			rb.SetServiceNamespace(value)
+		case "host.name":
+			rb.SetHostName(value)
+		case "sqlserver.computer.name":
+			rb.SetSqlserverComputerName(value)
+		case "sqlserver.instance.name":
+			rb.SetSqlserverInstanceName(value)
+		}
+	}
 }
 
 func (s *sqlServerScraperHelper) recordDatabaseIOMetrics(ctx context.Context) error {
@@ -769,6 +792,9 @@ func (s *sqlServerScraperHelper) recordDatabaseQueryTextAndPlan(ctx context.Cont
 			resourceAttributes.PutStr("sqlserver.instance.name", row[instanceNameKey])
 			resourceAttributes.PutStr("service.instance.id", s.serviceInstanceID)
 
+			// Apply resource attribute overrides (override priority: resource_attributes_override > auto-generated)
+			s.applyResourceOverridesToMap(resourceAttributes)
+
 			resourcesAdded = true
 		}
 		s.lb.RecordDbServerTopQueryEvent(
@@ -1063,8 +1089,18 @@ func (s *sqlServerScraperHelper) recordDatabaseSampleQuery(ctx context.Context) 
 			resourceAttributes.PutStr("sqlserver.instance.name", row[instanceNameKey])
 			resourceAttributes.PutStr("service.instance.id", s.serviceInstanceID)
 
+			// Apply resource attribute overrides (override priority: resource_attributes_override > auto-generated)
+			s.applyResourceOverridesToMap(resourceAttributes)
+
 			resourcesAdded = true
 		}
 	}
 	return resources, errors.Join(errs...)
+}
+
+// applyResourceOverridesToMap applies user-defined resource attribute overrides to pcommon.Map
+func (s *sqlServerScraperHelper) applyResourceOverridesToMap(attrs pcommon.Map) {
+	for key, value := range s.config.ResourceAttributesOverride {
+		attrs.PutStr(key, value)
+	}
 }
