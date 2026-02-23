@@ -40,6 +40,9 @@ resourceLogs:
               - key: oracledb.plan_hash_value
                 value:
                   stringValue: "34313939393139353638"
+              - key: oracledb.query_plan
+                value:
+                  stringValue: '[{"CARDINALITY":"1","COST":"10","DEPTH":"0","ID":"0","OPERATION":"SELECT STATEMENT","OPTIONS":""},{"CARDINALITY":"1","COST":"10","DEPTH":"1","ID":"1","OPERATION":"TABLE ACCESS","OPTIONS":"FULL"}]'
               - key: oracledb.sql_id
                 value:
                   stringValue: 48bc50b6fuz4y
