@@ -86,8 +86,71 @@ type postgreSQLClient struct {
 	closeFn func() error
 }
 
+// explainableStatements is a whitelist of SQL statements that PostgreSQL can EXPLAIN.
+// This matches the approach used by DataDog's postgres integration.
+// See: https://github.com/DataDog/integrations-core/blob/master/postgres/datadog_checks/postgres/statement_samples.py
+var explainableStatements = map[string]bool{
+	"SELECT": true,
+	"TABLE":  true, // TABLE is shorthand for SELECT * FROM
+	"DELETE": true,
+	"INSERT": true,
+	"UPDATE": true,
+	"WITH":   true, // CTEs
+	"MERGE":  true, // PostgreSQL 15+
+	"VALUES": true,
+}
+
+// isExplainableQuery checks if a query can be explained by PostgreSQL.
+// Uses a whitelist approach (like DataDog) - only allows known DML statements.
+// EXPLAIN only works with SELECT, INSERT, UPDATE, DELETE, MERGE, VALUES, WITH, TABLE.
+// DDL statements like GRANT, REVOKE, DROP, CREATE, ALTER, etc. cannot be explained.
+func isExplainableQuery(query string) bool {
+	// Normalize query: trim whitespace and convert to uppercase for matching
+	normalizedQuery := strings.ToUpper(strings.TrimSpace(query))
+
+	// Remove leading comments (both -- and /* */ style)
+	for {
+		if strings.HasPrefix(normalizedQuery, "--") {
+			// Single-line comment - find end of line
+			if idx := strings.Index(normalizedQuery, "\n"); idx != -1 {
+				normalizedQuery = strings.TrimSpace(normalizedQuery[idx+1:])
+			} else {
+				return false // Query is only a comment
+			}
+		} else if strings.HasPrefix(normalizedQuery, "/*") {
+			// Multi-line comment - find closing */
+			if idx := strings.Index(normalizedQuery, "*/"); idx != -1 {
+				normalizedQuery = strings.TrimSpace(normalizedQuery[idx+2:])
+			} else {
+				return false // Unclosed comment
+			}
+		} else {
+			break
+		}
+	}
+
+	if normalizedQuery == "" {
+		return false
+	}
+
+	// Extract the first word (command) from the query
+	firstWord := normalizedQuery
+	if idx := strings.IndexAny(normalizedQuery, " \t\n("); idx != -1 {
+		firstWord = normalizedQuery[:idx]
+	}
+
+	// Check if the command is in our whitelist of explainable statements
+	return explainableStatements[firstWord]
+}
+
 // explainQuery implements client.
 func (c *postgreSQLClient) explainQuery(query, queryID string, logger *zap.Logger) (string, error) {
+	// Check if the query is explainable before attempting EXPLAIN
+	if !isExplainableQuery(query) {
+		logger.Debug("skipping EXPLAIN for non-explainable query", zap.String("queryID", queryID))
+		return "", nil
+	}
+
 	normalizedQueryID := strings.ReplaceAll(queryID, "-", "_")
 
 	// PostgreSQL's pg_stat_statements returns queries with $1, $2 placeholders
