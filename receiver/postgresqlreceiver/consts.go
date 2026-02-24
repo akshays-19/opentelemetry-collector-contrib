@@ -26,6 +26,7 @@ const (
 	querySampleColumnClientPort           = "client_port"
 	querySampleColumnDatname              = "datname"
 	querySampleColumnDurationMilliseconds = "duration_ms"
+	querySampleColumnNormalizedQuery      = "normalized_query"
 	querySampleColumnPID                  = "pid"
 	querySampleColumnQuery                = "query"
 	querySampleColumnQueryID              = "query_id"

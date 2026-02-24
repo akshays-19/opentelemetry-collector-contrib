@@ -38,7 +38,8 @@ type TopQueryCollection struct {
 }
 
 type QuerySampleCollection struct {
-	MaxRowsPerQuery int64 `mapstructure:"max_rows_per_query"`
+	MaxRowsPerQuery        int64 `mapstructure:"max_rows_per_query"`
+	MaxExplainEachInterval int64 `mapstructure:"max_explain_each_interval"`
 	// prevent unkeyed literal initialization
 	_ struct{}
 }

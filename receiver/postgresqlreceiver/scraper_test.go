@@ -421,6 +421,7 @@ var querySampleColumns = []string{
 	querySampleColumnQueryStartTimestamp,
 	querySampleColumnState,
 	querySampleColumnQuery,
+	querySampleColumnNormalizedQuery,
 	querySampleColumnDurationMilliseconds,
 }
 
@@ -473,9 +474,10 @@ func TestScrapeQuerySample(t *testing.T) {
 		querySampleColumnQueryStartTimestamp:  "123445.123",
 		querySampleColumnState:                "idle",
 		querySampleColumnQuery:                "select * from pg_stat_activity where id = 32",
+		querySampleColumnNormalizedQuery:      "select * from pg_stat_activity where id = $1",
 		querySampleColumnDurationMilliseconds: "1.2",
 	}))
-	actualLogs, err := scraper.scrapeQuerySamples(t.Context(), 30)
+	actualLogs, err := scraper.scrapeQuerySamples(t.Context(), 30, 10)
 	assert.NoError(t, err)
 	expectedFile := filepath.Join("testdata", "scraper", "query-sample", "expected.yaml")
 	// Uncomment line below to re-generate expected logs.
@@ -523,9 +525,10 @@ func TestScrapeQuerySampleWithTraceparent(t *testing.T) {
 		querySampleColumnQueryStartTimestamp:  "123445.123",
 		querySampleColumnState:                "idle",
 		querySampleColumnQuery:                "select * from pg_stat_activity where id = 32",
+		querySampleColumnNormalizedQuery:      "select * from pg_stat_activity where id = $1",
 		querySampleColumnDurationMilliseconds: "1.2",
 	}))
-	actualLogs, err := scraper.scrapeQuerySamples(t.Context(), 30)
+	actualLogs, err := scraper.scrapeQuerySamples(t.Context(), 30, 10)
 	require.NoError(t, err)
 
 	require.Equal(t, 1, actualLogs.ResourceLogs().Len())

@@ -183,7 +183,7 @@ func (p *postgreSQLScraper) scrape(ctx context.Context) (pmetric.Metrics, error)
 	return p.mb.Emit(metadata.WithResource(rb.Emit())), errs.combine()
 }
 
-func (p *postgreSQLScraper) scrapeQuerySamples(ctx context.Context, maxRowsPerQuery int64) (plog.Logs, error) {
+func (p *postgreSQLScraper) scrapeQuerySamples(ctx context.Context, maxRowsPerQuery, maxExplainEachInterval int64) (plog.Logs, error) {
 	dbClient, err := p.clientFactory.getClient(defaultPostgreSQLDatabase)
 	if err != nil {
 		p.logger.Error("Failed to initialize connection to postgres", zap.Error(err))
@@ -192,7 +192,7 @@ func (p *postgreSQLScraper) scrapeQuerySamples(ctx context.Context, maxRowsPerQu
 
 	var errs errsMux
 
-	p.collectQuerySamples(ctx, dbClient, maxRowsPerQuery, &errs, p.logger)
+	p.collectQuerySamples(ctx, dbClient, maxRowsPerQuery, maxExplainEachInterval, &errs, p.logger)
 
 	defer dbClient.Close()
 
@@ -209,7 +209,7 @@ func (p *postgreSQLScraper) scrapeTopQuery(ctx context.Context, maxRowsPerQuery,
 	return p.lb.Emit(metadata.WithLogsResource(rb.Emit())), nil
 }
 
-func (p *postgreSQLScraper) collectQuerySamples(ctx context.Context, dbClient client, limit int64, mux *errsMux, logger *zap.Logger) {
+func (p *postgreSQLScraper) collectQuerySamples(ctx context.Context, dbClient client, limit, maxExplainEachInterval int64, mux *errsMux, logger *zap.Logger) {
 	timestamp := pcommon.NewTimestampFromTime(time.Now())
 
 	attributes, newestQueryTimestamp, err := dbClient.getQuerySamples(ctx, limit, p.newestQueryTimestamp, logger)
@@ -218,6 +218,9 @@ func (p *postgreSQLScraper) collectQuerySamples(ctx context.Context, dbClient cl
 		mux.addPartial(err)
 		return
 	}
+
+	explained := int64(0)
+
 	for _, atts := range attributes {
 		// Use a background context so query-sample logs are not automatically linked to the scrape context.
 		logCtx := context.Background()
@@ -226,6 +229,27 @@ func (p *postgreSQLScraper) collectQuerySamples(ctx context.Context, dbClient cl
 				logCtx = ctx
 			}
 		}
+
+		// Get query plan using same pattern as Top Query
+		queryID, _ := atts[dbAttributePrefix+querySampleColumnQueryID].(string)
+		normalizedQuery, _ := atts[dbAttributePrefix+querySampleColumnNormalizedQuery].(string)
+
+		plan := ""
+		if queryID != "" && normalizedQuery != "" {
+			cachedPlan, ok := p.queryPlanCache.Get(queryID + "-plan")
+			if ok {
+				plan = cachedPlan
+			} else if explained < maxExplainEachInterval {
+				plan, err = dbClient.explainQuery(normalizedQuery, queryID, logger)
+				if err != nil {
+					logger.Error("failed to explain query", zap.String("queryID", queryID), zap.Error(err))
+				}
+				// Cache the result to avoid repeated explain attempts
+				p.queryPlanCache.Add(queryID+"-plan", plan)
+				explained++
+			}
+		}
+
 		p.lb.RecordDbServerQuerySampleEvent(logCtx,
 			timestamp,
 			metadata.AttributeDbSystemNamePostgresql,
@@ -243,6 +267,7 @@ func (p *postgreSQLScraper) collectQuerySamples(ctx context.Context, dbClient cl
 			atts[dbAttributePrefix+querySampleColumnWaitEventType].(string),
 			atts[dbAttributePrefix+querySampleColumnQueryID].(string),
 			atts[postgresqlTotalExecTimeAttributeName].(float64),
+			plan,
 		)
 	}
 }

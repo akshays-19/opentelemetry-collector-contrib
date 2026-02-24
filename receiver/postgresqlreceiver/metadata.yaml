@@ -200,6 +200,7 @@ events:
       - postgresql.wait_event_type
       - postgresql.query_id
       - postgresql.total_exec_time
+      - postgresql.query_plan
   db.server.top_query:
     enabled: true
     description: top query
