@@ -87,54 +87,55 @@ type postgreSQLClient struct {
 }
 
 // explainableStatements is a whitelist of SQL statements that PostgreSQL can EXPLAIN.
-var explainableStatements = map[string]bool{
-	"SELECT": true,
-	"TABLE":  true, // TABLE is shorthand for SELECT * FROM
-	"DELETE": true,
-	"INSERT": true,
-	"UPDATE": true,
-	"WITH":   true, // CTEs
-	"MERGE":  true, // PostgreSQL 15+
-	"VALUES": true,
+var explainableStatements = map[string]struct{}{
+	"SELECT": {},
+	"TABLE":  {}, // TABLE is shorthand for SELECT * FROM
+	"DELETE": {},
+	"INSERT": {},
+	"UPDATE": {},
+	"WITH":   {}, // CTEs
+	"MERGE":  {}, // PostgreSQL 15+
+	"VALUES": {},
 }
 
 // isExplainableQuery checks if a query can be explained by PostgreSQL.
 // Uses a whitelist approach, only allows known DML statements.
 func isExplainableQuery(query string) bool {
-	normalizedQuery := strings.ToUpper(strings.TrimSpace(query))
+	trimmed := strings.TrimSpace(query)
 
 	// Remove leading comments (both -- and /* */ style)
 	for {
-		if strings.HasPrefix(normalizedQuery, "--") {
-			// Single-line comment - find end of line
-			if idx := strings.Index(normalizedQuery, "\n"); idx != -1 {
-				normalizedQuery = strings.TrimSpace(normalizedQuery[idx+1:])
-			} else {
+		switch {
+		case strings.HasPrefix(trimmed, "--"):
+			idx := strings.Index(trimmed, "\n")
+			if idx == -1 {
 				return false
 			}
-		} else if strings.HasPrefix(normalizedQuery, "/*") {
-			// Multi-line comment - find closing */
-			if idx := strings.Index(normalizedQuery, "*/"); idx != -1 {
-				normalizedQuery = strings.TrimSpace(normalizedQuery[idx+2:])
-			} else {
-				return false // Unclosed comment
+			trimmed = strings.TrimSpace(trimmed[idx+1:])
+			continue
+		case strings.HasPrefix(trimmed, "/*"):
+			idx := strings.Index(trimmed, "*/")
+			if idx == -1 {
+				return false
 			}
-		} else {
-			break
+			trimmed = strings.TrimSpace(trimmed[idx+2:])
+			continue
 		}
+		break
 	}
 
-	if normalizedQuery == "" {
+	if trimmed == "" {
 		return false
 	}
 
-	// Extract the first word (command) from the query
-	firstWord := normalizedQuery
-	if idx := strings.IndexAny(normalizedQuery, " \t\n("); idx != -1 {
-		firstWord = normalizedQuery[:idx]
+	// Extract and uppercase only the first word to check against the whitelist
+	firstWord := trimmed
+	if idx := strings.IndexAny(trimmed, " \t\n("); idx != -1 {
+		firstWord = trimmed[:idx]
 	}
 
-	return explainableStatements[firstWord]
+	_, ok := explainableStatements[strings.ToUpper(firstWord)]
+	return ok
 }
 
 // explainQuery implements client.
@@ -157,7 +158,9 @@ func (c *postgreSQLClient) explainQuery(query, queryID string, logger *zap.Logge
 		nulls[i] = "null"
 	}
 
-	defer c.client.Exec(fmt.Sprintf("/* otel-collector-ignore */ DEALLOCATE PREPARE otel_%s", normalizedQueryID))
+	defer func() {
+		_, _ = c.client.Exec(fmt.Sprintf("/* otel-collector-ignore */ DEALLOCATE PREPARE otel_%s", normalizedQueryID))
+	}()
 
 	// if there is no parameter needed, we can not put an empty bracket
 
