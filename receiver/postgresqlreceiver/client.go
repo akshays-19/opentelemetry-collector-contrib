@@ -87,8 +87,6 @@ type postgreSQLClient struct {
 }
 
 // explainableStatements is a whitelist of SQL statements that PostgreSQL can EXPLAIN.
-// This matches the approach used by DataDog's postgres integration.
-// See: https://github.com/DataDog/integrations-core/blob/master/postgres/datadog_checks/postgres/statement_samples.py
 var explainableStatements = map[string]bool{
 	"SELECT": true,
 	"TABLE":  true, // TABLE is shorthand for SELECT * FROM
@@ -101,11 +99,8 @@ var explainableStatements = map[string]bool{
 }
 
 // isExplainableQuery checks if a query can be explained by PostgreSQL.
-// Uses a whitelist approach (like DataDog) - only allows known DML statements.
-// EXPLAIN only works with SELECT, INSERT, UPDATE, DELETE, MERGE, VALUES, WITH, TABLE.
-// DDL statements like GRANT, REVOKE, DROP, CREATE, ALTER, etc. cannot be explained.
+// Uses a whitelist approach, only allows known DML statements.
 func isExplainableQuery(query string) bool {
-	// Normalize query: trim whitespace and convert to uppercase for matching
 	normalizedQuery := strings.ToUpper(strings.TrimSpace(query))
 
 	// Remove leading comments (both -- and /* */ style)
@@ -115,7 +110,7 @@ func isExplainableQuery(query string) bool {
 			if idx := strings.Index(normalizedQuery, "\n"); idx != -1 {
 				normalizedQuery = strings.TrimSpace(normalizedQuery[idx+1:])
 			} else {
-				return false // Query is only a comment
+				return false
 			}
 		} else if strings.HasPrefix(normalizedQuery, "/*") {
 			// Multi-line comment - find closing */
@@ -139,7 +134,6 @@ func isExplainableQuery(query string) bool {
 		firstWord = normalizedQuery[:idx]
 	}
 
-	// Check if the command is in our whitelist of explainable statements
 	return explainableStatements[firstWord]
 }
 
@@ -163,7 +157,6 @@ func (c *postgreSQLClient) explainQuery(query, queryID string, logger *zap.Logge
 		nulls[i] = "null"
 	}
 
-	//nolint:errcheck
 	defer c.client.Exec(fmt.Sprintf("/* otel-collector-ignore */ DEALLOCATE PREPARE otel_%s", normalizedQueryID))
 
 	// if there is no parameter needed, we can not put an empty bracket
