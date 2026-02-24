@@ -87,8 +87,6 @@ type postgreSQLClient struct {
 }
 
 // explainableStatements is a whitelist of SQL statements that PostgreSQL can EXPLAIN.
-// This matches the approach used by DataDog's postgres integration.
-// See: https://github.com/DataDog/integrations-core/blob/master/postgres/datadog_checks/postgres/statement_samples.py
 var explainableStatements = map[string]bool{
 	"SELECT": true,
 	"TABLE":  true, // TABLE is shorthand for SELECT * FROM
@@ -101,9 +99,7 @@ var explainableStatements = map[string]bool{
 }
 
 // isExplainableQuery checks if a query can be explained by PostgreSQL.
-// Uses a whitelist approach (like DataDog) - only allows known DML statements.
-// EXPLAIN only works with SELECT, INSERT, UPDATE, DELETE, MERGE, VALUES, WITH, TABLE.
-// DDL statements like GRANT, REVOKE, DROP, CREATE, ALTER, etc. cannot be explained.
+// Uses a whitelist approach - only allows known DML statements.
 func isExplainableQuery(query string) bool {
 	// Normalize query: trim whitespace and convert to uppercase for matching
 	normalizedQuery := strings.ToUpper(strings.TrimSpace(query))
