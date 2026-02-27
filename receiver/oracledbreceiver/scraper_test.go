@@ -585,7 +585,7 @@ func TestTopNLogsProcedureNameEmpty(t *testing.T) {
 
 	logs, err := scrpr.scrapeLogs(t.Context())
 	require.NoError(t, err)
-	require.Greater(t, logs.ResourceLogs().Len(), 0)
+	require.Positive(t, logs.ResourceLogs().Len())
 
 	scopeLogs := logs.ResourceLogs().At(0).ScopeLogs().At(0)
 	require.Equal(t, 2, scopeLogs.LogRecords().Len(), "Expected 2 top query records")
