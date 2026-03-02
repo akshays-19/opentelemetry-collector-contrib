@@ -197,30 +197,18 @@ func (s *sqlServerScraperHelper) setupResourceBuilder(rb *metadata.ResourceBuild
 		rb.SetServerPort(serverPort)
 	}
 
-	// Apply resource attribute overrides (override priority: resource_attributes_override > auto-generated)
-	s.applyResourceOverrides(rb)
-
 	return rb
 }
 
-// applyResourceOverrides applies user-defined resource attribute overrides to the ResourceBuilder
+// applyResourceOverrides emits metrics for a resource, applying any user-defined
+// resource attribute overrides after all auto-generated values have been set.
+// Overrides are applied on the final Resource so they cannot be clobbered.
 func (s *sqlServerScraperHelper) applyResourceOverrides(rb *metadata.ResourceBuilder) {
+	res := rb.Emit()
 	for key, value := range s.config.ResourceAttributesOverride {
-		switch key {
-		case "service.instance.id":
-			rb.SetServiceInstanceID(value)
-		case "service.name":
-			rb.SetServiceName(value)
-		case "service.namespace":
-			rb.SetServiceNamespace(value)
-		case "host.name":
-			rb.SetHostName(value)
-		case "sqlserver.computer.name":
-			rb.SetSqlserverComputerName(value)
-		case "sqlserver.instance.name":
-			rb.SetSqlserverInstanceName(value)
-		}
+		res.Attributes().PutStr(key, value)
 	}
+	s.mb.EmitForResource(metadata.WithResource(res))
 }
 
 func (s *sqlServerScraperHelper) recordDatabaseIOMetrics(ctx context.Context) error {
@@ -271,7 +259,7 @@ func (s *sqlServerScraperHelper) recordDatabaseIOMetrics(ctx context.Context) er
 			s.mb.RecordSqlserverDatabaseIoDataPoint(now, row[readBytesKey], row[physicalFilenameKey], row[logicalFilenameKey], row[fileTypeKey], metadata.AttributeDirectionRead),
 			s.mb.RecordSqlserverDatabaseIoDataPoint(now, row[writeBytesKey], row[physicalFilenameKey], row[logicalFilenameKey], row[fileTypeKey], metadata.AttributeDirectionWrite))
 
-		s.mb.EmitForResource(metadata.WithResource(rb.Emit()))
+		s.applyResourceOverrides(rb)
 	}
 
 	if len(rows) == 0 {
@@ -573,7 +561,7 @@ func (s *sqlServerScraperHelper) recordDatabasePerfCounterMetrics(ctx context.Co
 			}
 		}
 
-		s.mb.EmitForResource(metadata.WithResource(rb.Emit()))
+		s.applyResourceOverrides(rb)
 	}
 
 	return errors.Join(errs...)
@@ -614,7 +602,7 @@ func (s *sqlServerScraperHelper) recordDatabaseStatusMetrics(ctx context.Context
 			s.mb.RecordSqlserverComputerUptimeDataPoint(now, row[computerUptime]),
 		)
 
-		s.mb.EmitForResource(metadata.WithResource(rb.Emit()))
+		s.applyResourceOverrides(rb)
 	}
 
 	return errors.Join(errs...)
@@ -651,7 +639,7 @@ func (s *sqlServerScraperHelper) recordDatabaseWaitMetrics(ctx context.Context) 
 			s.mb.RecordSqlserverOsWaitDurationDataPoint(now, val.(float64)/1e3, row[waitCategory], row[waitType])
 		}
 
-		s.mb.EmitForResource(metadata.WithResource(rb.Emit()))
+		s.applyResourceOverrides(rb)
 	}
 
 	return errors.Join(errs...)
