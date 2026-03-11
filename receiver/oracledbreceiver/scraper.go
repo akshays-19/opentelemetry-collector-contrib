@@ -742,13 +742,29 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 		scrapeErrors = append(scrapeErrors, fmt.Errorf("error executing %s: %w", samplesQuery, err))
 	}
 
-	rb := s.setupResourceBuilder(s.lb.NewResourceBuilder())
-
+	// Collect unique child addresses for plan lookup
+	childAddressSet := make(map[string]struct{})
+	var validRows []metricRow
 	for _, row := range rows {
 		if row[sqlText] == "" {
 			continue
 		}
+		validRows = append(validRows, row)
+		if addr := row[childAddress]; addr != "" {
+			childAddressSet[addr] = struct{}{}
+		}
+	}
 
+	// Extract unique child addresses and fetch plans
+	childAddresses := make([]string, 0, len(childAddressSet))
+	for addr := range childAddressSet {
+		childAddresses = append(childAddresses, addr)
+	}
+	childAddressToPlanMap := s.getPlanMapForChildAddresses(ctx, childAddresses)
+
+	rb := s.setupResourceBuilder(s.lb.NewResourceBuilder())
+
+	for _, row := range validRows {
 		obfuscatedSQL, err := s.obfuscator.obfuscateSQLString(row[sqlText])
 		if err != nil {
 			s.logger.Error(fmt.Sprintf("oracleScraper failed updating this log record: %s", err))
@@ -756,6 +772,17 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 		}
 
 		queryPlanHashVal := hex.EncodeToString([]byte(row[planHashValue]))
+
+		// Get query plan for this sample
+		var planString string
+		if planRows, ok := childAddressToPlanMap[row[childAddress]]; ok {
+			planBytes, err := json.Marshal(planRows)
+			if err != nil {
+				s.logger.Error("Error marshaling plan data to JSON", zap.Error(err))
+			} else {
+				planString = string(planBytes)
+			}
+		}
 
 		queryDuration, err := strconv.ParseFloat(row[duration], 64)
 		if err != nil {
@@ -778,7 +805,7 @@ func (s *oracleScraper) collectQuerySamples(ctx context.Context, logs plog.Logs)
 		})
 
 		s.lb.RecordDbServerQuerySampleEvent(queryContext, timestamp, obfuscatedSQL, dbSystemNameVal, row[username], row[serviceName], row[hostName],
-			clientPort, row[hostName], clientPort, queryPlanHashVal, row[sqlID], row[sqlChildNumber], row[childAddress], row[sid], row[serialNumber], row[process],
+			clientPort, row[hostName], clientPort, queryPlanHashVal, planString, row[sqlID], row[sqlChildNumber], row[childAddress], row[sid], row[serialNumber], row[process],
 			row[schemaName], row[program], row[module], row[status], row[state], row[waitclass], row[event], objID, row[objectName], row[objectType],
 			row[osUser], queryDuration)
 	}
@@ -808,16 +835,28 @@ func (s *oracleScraper) obfuscateCacheHits(hits []queryMetricCacheHit) []queryMe
 }
 
 func (s *oracleScraper) getChildAddressToPlanMap(ctx context.Context, hits []queryMetricCacheHit) map[string][]metricRow {
-	childAddressToPlanMap := map[string][]metricRow{}
 	if len(hits) == 0 {
+		return map[string][]metricRow{}
+	}
+
+	childAddresses := make([]string, len(hits))
+	for i, hit := range hits {
+		childAddresses[i] = hit.childAddress
+	}
+	return s.getPlanMapForChildAddresses(ctx, childAddresses)
+}
+
+func (s *oracleScraper) getPlanMapForChildAddresses(ctx context.Context, childAddresses []string) map[string][]metricRow {
+	childAddressToPlanMap := map[string][]metricRow{}
+	if len(childAddresses) == 0 {
 		return childAddressToPlanMap
 	}
 
 	var childAddressSlice []any
-	placeholders := make([]string, len(hits))
-	for i, hit := range hits {
+	placeholders := make([]string, len(childAddresses))
+	for i, addr := range childAddresses {
 		placeholders[i] = fmt.Sprintf("HEXTORAW(:%d)", i+1)
-		childAddressSlice = append(childAddressSlice, hit.childAddress)
+		childAddressSlice = append(childAddressSlice, addr)
 	}
 
 	placeholdersCombined := strings.Join(placeholders, ", ")
